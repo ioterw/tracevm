@@ -45,3 +45,23 @@ Choose External HTTP Provider
 Connect by default address.
 
 ![](images/remix2.png)
+
+## Usage example
+
+Let's imagine we have such contract.
+
+![](images/sample1.png)
+
+Let's deploy the contract and see the output.
+
+![](images/sample2.png)
+
+We see that:
+
+- event type is final_slot, which means that this slot was written at the end of transaction (not reverted).
+- further we see slot offsets (constant - initial slot, mapping - solidity keccak mapping magic, offset - offset from last value)
+- short slot formula, which shows all cryptographic operations which were performed with slot
+
+Also there is a full formula, which computes all needed data from initial initcode (or calldata).
+
+![](images/sample3.png)
