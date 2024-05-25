@@ -1,0 +1,5 @@
+*.txt
+bd
+build
+
+__pycache__

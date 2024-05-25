@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="monokai.min.css">
+    <script src="highlight.min.js"></script>
+    <title>Traces</title>
+    <style>
+        body {background-color: grey;}
+    </style>
+</head>
+<body>
+    <pre id=blocks></pre>
+    <script>
+        var blocksNum = 0
+        var blockNodes = document.getElementById('blocks')
+
+        function handle() {
+            var xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState != XMLHttpRequest.DONE) {
+                    return
+                }
+                var text = xhr.responseText
+                var blocks = text.trim().split('\n\n')
+                if (blocks[0] == '') {
+                    blocks = []
+                }
+                if (blocks.length != blocksNum) {
+                    blocksNum = 0
+                    blockNodes.textContent = ''
+                }
+                for (var i = blocksNum; i < blocks.length; i++) {
+                    var block = blocks[i]
+                    var el = document.createElement('code')
+                    el.className = "language-python"
+                    el.textContent = block
+                    blockNodes.appendChild(el)
+                    hljs.highlightElement(el)
+                    for (var j = 0; j < 2; j++) {
+                        blockNodes.appendChild(document.createElement('br'))
+                    }
+                    blocksNum++
+                }
+            }
+            xhr.open('GET', '/file', true)
+            xhr.send(null)
+        }
+
+        handle()
+        setInterval(handle, 3000)
+    </script>
+</body>
+</html>

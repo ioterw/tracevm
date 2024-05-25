@@ -1,0 +1,20 @@
+{
+    "kv": {
+        "engine": "leveldb",
+        "root": "db"
+    },
+    "logger": {
+        "opcodes_short": {},
+        "opcodes": {},
+        "final_slots_short": true,
+        "final_slots": true,
+        "codes_short": false,
+        "codes": false,
+        "return_data_short": false,
+        "return_data": true,
+        "logs_short": false,
+        "logs": true,
+        "sol_view": true
+    },
+    "output": "out.txt"
+}
