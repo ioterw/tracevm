@@ -65,3 +65,7 @@ We see that:
 Also there is a full formula, which computes all needed data from initial initcode (or calldata).
 
 ![](images/sample3.png)
+
+## Found bug?
+
+Please open an [issue](https://github.com/ioterw/tracevm/issues) and supply solidity code that produced unexpected behaviour.
