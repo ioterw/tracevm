@@ -29,3 +29,19 @@ To open webview on address [127.0.0.1:4334](http://127.0.0.1:4334) run the follo
 ```bash
 ./run.py conf.json
 ```
+
+TracEVM will be running!
+
+![](images/webview.png)
+
+## Connecting with Remix
+
+It is expected to have Remix installed.
+
+Choose External HTTP Provider
+
+![](images/remix1.png)
+
+Connect by default address.
+
+![](images/remix2.png)
