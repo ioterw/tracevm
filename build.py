@@ -18,6 +18,8 @@ def main():
             shutil.copy(path, file_path)
         else:
             shutil.copytree(path, file_path)
+
+    popen(['go', 'get', 'github.com/basho/riak-go-client'])
     popen(['make', 'geth'])
     shutil.copy('build/bin/geth', '..')
 
