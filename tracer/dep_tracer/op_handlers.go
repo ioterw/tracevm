@@ -21,16 +21,16 @@ type OPHandler interface {
     Before(
         db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int,
         stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64,
-        pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error,
+        pc uint64, op byte, scope tracing.OpContext,
    	) int
     After(
         db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int,
         stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64,
-        pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error,
+        pc uint64, op byte, scope tracing.OpContext,
    	)
     Exit(
         db *SimpleDB, state *TransactionDB,
-        depth int, output []byte, gasUsed uint64, err error, reverted bool,
+        success bool,
     )
 }
 
@@ -137,7 +137,7 @@ func (oh *PushHandler) Register(handlers map[byte]OPHandler) {
         handlers[byte(i)] = oh
     }
 }
-func (oh *PushHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *PushHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     oh.data = DataPush {
         Pc: pc,
         Size: uint64(op) - uint64(vm.PUSH0),
@@ -145,10 +145,10 @@ func (oh *PushHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint25
 
     return DIRECTION_NONE
 }
-func (oh *PushHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *PushHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     oh.data.Handle(db, state)
 }
-func (oh *PushHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *PushHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type DupHandler struct {
@@ -159,17 +159,17 @@ func (oh *DupHandler) Register(handlers map[byte]OPHandler) {
         handlers[byte(i)] = oh
     }
 }
-func (oh *DupHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *DupHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     oh.data = DataDup {
         Size: 1 + int(op) - int(vm.DUP1),
     }
 
     return DIRECTION_NONE
 }
-func (oh *DupHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *DupHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     oh.data.Handle(db, state)
 }
-func (oh *DupHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *DupHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type SwapHandler struct {
@@ -180,17 +180,17 @@ func (oh *SwapHandler) Register(handlers map[byte]OPHandler) {
         handlers[byte(i)] = oh
     }
 }
-func (oh *SwapHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *SwapHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     oh.data = DataSwap {
         Size: 2 + int64(op) - int64(vm.SWAP1),
     }
 
     return DIRECTION_NONE
 }
-func (oh *SwapHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *SwapHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     oh.data.Handle(db, state)
 }
-func (oh *SwapHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *SwapHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type MStoreHandler struct {
@@ -199,17 +199,17 @@ type MStoreHandler struct {
 func (oh *MStoreHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.MSTORE)] = oh
 }
-func (oh *MStoreHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *MStoreHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     oh.data = DataMStore {
         Offset: stack[stackSize-1].Uint64(),
     }
 
     return DIRECTION_NONE
 }
-func (oh *MStoreHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *MStoreHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     oh.data.Handle(db, state)
 }
-func (oh *MStoreHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *MStoreHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type MLoadHandler struct {
@@ -218,96 +218,96 @@ type MLoadHandler struct {
 func (oh *MLoadHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.MLOAD)] = oh
 }
-func (oh *MLoadHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *MLoadHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     oh.data = DataMLoad {
         Offset: stack[stackSize-1].Uint64(),
     }
     return DIRECTION_NONE
 }
-func (oh *MLoadHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *MLoadHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     oh.data.Handle(db, state)
 }
-func (oh *MLoadHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *MLoadHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type GasHandler struct {}
 func (oh *GasHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.GAS)] = oh
 }
-func (oh *GasHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *GasHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *GasHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *GasHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataConstant {
         Op: OPGas,
         Value: stack[stackSize-1],
     }.Handle(db, state)
 }
-func (oh *GasHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *GasHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type CallValueHandler struct {}
 func (oh *CallValueHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.CALLVALUE)] = oh
 }
-func (oh *CallValueHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *CallValueHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *CallValueHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *CallValueHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataConstant {
         Op: OPCallValue,
         Value: stack[stackSize-1],
     }.Handle(db, state)
 }
-func (oh *CallValueHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *CallValueHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type AddressHandler struct {}
 func (oh *AddressHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.ADDRESS)] = oh
 }
-func (oh *AddressHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *AddressHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *AddressHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *AddressHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataConstant20 {
         Op: OPAddress,
         Value: stack[stackSize-1],
     }.Handle(db, state)
 }
-func (oh *AddressHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *AddressHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type IsZeroHandler struct {}
 func (oh *IsZeroHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.ISZERO)] = oh
 }
-func (oh *IsZeroHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *IsZeroHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *IsZeroHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *IsZeroHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataOne {
         Op: OPIsZero,
         Value: stack[stackSize-1],
     }.Handle(db, state)
 }
-func (oh *IsZeroHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *IsZeroHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type NotHandler struct {}
 func (oh *NotHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.NOT)] = oh
 }
-func (oh *NotHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *NotHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *NotHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *NotHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataOne {
         Op: OPNot,
         Value: stack[stackSize-1],
     }.Handle(db, state)
 }
-func (oh *NotHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *NotHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type ByteHandler struct {
@@ -316,16 +316,16 @@ type ByteHandler struct {
 func (oh *ByteHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.BYTE)] = oh
 }
-func (oh *ByteHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *ByteHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     oh.data = DataByte {
         Offset: stack[stackSize-1],
     }
     return DIRECTION_NONE
 }
-func (oh *ByteHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *ByteHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     oh.data.Handle(db, state)
 }
-func (oh *ByteHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *ByteHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type JumpHandler struct {
@@ -334,17 +334,17 @@ type JumpHandler struct {
 func (oh *JumpHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.JUMP)] = oh
 }
-func (oh *JumpHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *JumpHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     oh.data = DataEmpty {
         N: 1,
     }
     
     return DIRECTION_NONE
 }
-func (oh *JumpHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *JumpHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     oh.data.Handle(db, state)
 }
-func (oh *JumpHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *JumpHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type JumpIHandler struct {
@@ -353,17 +353,17 @@ type JumpIHandler struct {
 func (oh *JumpIHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.JUMPI)] = oh
 }
-func (oh *JumpIHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *JumpIHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     oh.data = DataEmpty {
         N: 2,
     }
     
     return DIRECTION_NONE
 }
-func (oh *JumpIHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *JumpIHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     oh.data.Handle(db, state)
 }
-func (oh *JumpIHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *JumpIHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type JumpDestHandler struct {
@@ -372,17 +372,17 @@ type JumpDestHandler struct {
 func (oh *JumpDestHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.JUMPDEST)] = oh
 }
-func (oh *JumpDestHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *JumpDestHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     oh.data = DataEmpty {
         N: 0,
     }
     
     return DIRECTION_NONE
 }
-func (oh *JumpDestHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *JumpDestHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     oh.data.Handle(db, state)
 }
-func (oh *JumpDestHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *JumpDestHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type PopHandler struct {
@@ -391,15 +391,15 @@ type PopHandler struct {
 func (oh *PopHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.POP)] = oh
 }
-func (oh *PopHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *PopHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     oh.data = DataPop {}
     
     return DIRECTION_NONE
 }
-func (oh *PopHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *PopHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     oh.data.Handle(db, state)
 }
-func (oh *PopHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *PopHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type CodeCopyHandler struct {
@@ -408,7 +408,7 @@ type CodeCopyHandler struct {
 func (oh *CodeCopyHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.CODECOPY)] = oh
 }
-func (oh *CodeCopyHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *CodeCopyHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     uint64CodeOffset, overflow := stack[stackSize-2].Uint64WithOverflow()
     if overflow {
         uint64CodeOffset = 0xffffffffffffffff
@@ -421,10 +421,10 @@ func (oh *CodeCopyHandler) Before(db *SimpleDB, state *TransactionDB, stack []ui
 
     return DIRECTION_NONE
 }
-func (oh *CodeCopyHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *CodeCopyHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     oh.data.Handle(db, state)
 }
-func (oh *CodeCopyHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *CodeCopyHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type ExtCodeSizeHandler struct {
@@ -433,25 +433,25 @@ type ExtCodeSizeHandler struct {
 func (oh *ExtCodeSizeHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.EXTCODESIZE)] = oh
 }
-func (oh *ExtCodeSizeHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *ExtCodeSizeHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     oh.data = DataExtCodeSize {
         Address: stack[stackSize-1].Bytes20(),
     }
 
     return DIRECTION_NONE
 }
-func (oh *ExtCodeSizeHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *ExtCodeSizeHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     oh.data.CodeSize = stack[stackSize-1]
     oh.data.Handle(db, state)
 }
-func (oh *ExtCodeSizeHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *ExtCodeSizeHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type RevertHandler struct {}
 func (oh *RevertHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.REVERT)] = oh
 }
-func (oh *RevertHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *RevertHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     DataRevert {
         Offset: stack[stackSize-1].Uint64(),
         Size: stack[stackSize-2].Uint64(),
@@ -459,15 +459,15 @@ func (oh *RevertHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint
 
     return DIRECTION_RETURN
 }
-func (oh *RevertHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {}
-func (oh *RevertHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *RevertHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {}
+func (oh *RevertHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type ReturnHandler struct {}
 func (oh *ReturnHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.RETURN)] = oh
 }
-func (oh *ReturnHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *ReturnHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     offset := stack[stackSize-1].Uint64()
     size := stack[stackSize-2].Uint64()
 
@@ -491,21 +491,21 @@ func (oh *ReturnHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint
 
     return DIRECTION_RETURN
 }
-func (oh *ReturnHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {}
-func (oh *ReturnHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *ReturnHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {}
+func (oh *ReturnHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type StopHandler struct {}
 func (oh *StopHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.STOP)] = oh
 }
-func (oh *StopHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *StopHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     DataStop {}.Handle(db, state)
 
     return DIRECTION_RETURN
 }
-func (oh *StopHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {}
-func (oh *StopHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *StopHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {}
+func (oh *StopHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type SLoadHandler struct {
@@ -514,17 +514,17 @@ type SLoadHandler struct {
 func (oh *SLoadHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.SLOAD)] = oh
 }
-func (oh *SLoadHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *SLoadHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     oh.data = DataSLoad {
         Slot: stack[stackSize-1],
     }
     return DIRECTION_NONE
 }
-func (oh *SLoadHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *SLoadHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     oh.data.Value = stack[stackSize-1]
     oh.data.Handle(db, state)
 }
-func (oh *SLoadHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *SLoadHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type SStoreHandler struct {
@@ -533,17 +533,17 @@ type SStoreHandler struct {
 func (oh *SStoreHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.SSTORE)] = oh
 }
-func (oh *SStoreHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *SStoreHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     oh.data = DataSStore {
         Slot: stack[stackSize-1],
         Value: stack[stackSize-2],
     }
     return DIRECTION_NONE
 }
-func (oh *SStoreHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *SStoreHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     oh.data.Handle(db, state)
 }
-func (oh *SStoreHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *SStoreHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type TLoadHandler struct {
@@ -552,16 +552,16 @@ type TLoadHandler struct {
 func (oh *TLoadHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.TLOAD)] = oh
 }
-func (oh *TLoadHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *TLoadHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     oh.data = DataTLoad {
         Slot: stack[stackSize-1],
     }
     return DIRECTION_NONE
 }
-func (oh *TLoadHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *TLoadHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     oh.data.Handle(db, state)
 }
-func (oh *TLoadHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *TLoadHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type TStoreHandler struct {
@@ -570,368 +570,368 @@ type TStoreHandler struct {
 func (oh *TStoreHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.TSTORE)] = oh
 }
-func (oh *TStoreHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *TStoreHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     oh.data = DataTStore {
         Slot: stack[stackSize-1],
     }
     return DIRECTION_NONE
 }
-func (oh *TStoreHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *TStoreHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     oh.data.Handle(db, state)
 }
-func (oh *TStoreHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *TStoreHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type AddHandler struct {}
 func (oh *AddHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.ADD)] = oh
 }
-func (oh *AddHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *AddHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *AddHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *AddHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataTwo {
         Op: OPAdd,
         Value: stack[stackSize-1],
     }.Handle(db, state)
 }
-func (oh *AddHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *AddHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type DivHandler struct {}
 func (oh *DivHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.DIV)] = oh
 }
-func (oh *DivHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *DivHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *DivHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *DivHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataTwo {
         Op: OPDiv,
         Value: stack[stackSize-1],
     }.Handle(db, state)
 }
-func (oh *DivHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *DivHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type SDivHandler struct {}
 func (oh *SDivHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.SDIV)] = oh
 }
-func (oh *SDivHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *SDivHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *SDivHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *SDivHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataTwo {
         Op: OPSDiv,
         Value: stack[stackSize-1],
     }.Handle(db, state)
 }
-func (oh *SDivHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *SDivHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type ModHandler struct {}
 func (oh *ModHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.MOD)] = oh
 }
-func (oh *ModHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *ModHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *ModHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *ModHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataTwo {
         Op: OPMod,
         Value: stack[stackSize-1],
     }.Handle(db, state)
 }
-func (oh *ModHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *ModHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type SModHandler struct {}
 func (oh *SModHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.SMOD)] = oh
 }
-func (oh *SModHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *SModHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *SModHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *SModHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataTwo {
         Op: OPSMod,
         Value: stack[stackSize-1],
     }.Handle(db, state)
 }
-func (oh *SModHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *SModHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type AddModHandler struct {}
 func (oh *AddModHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.ADDMOD)] = oh
 }
-func (oh *AddModHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *AddModHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *AddModHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *AddModHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataThree {
         Op: OPAddMod,
         Value: stack[stackSize-1],
     }.Handle(db, state)
 }
-func (oh *AddModHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *AddModHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type MulModHandler struct {}
 func (oh *MulModHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.MULMOD)] = oh
 }
-func (oh *MulModHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *MulModHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *MulModHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *MulModHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataThree {
         Op: OPMulMod,
         Value: stack[stackSize-1],
     }.Handle(db, state)
 }
-func (oh *MulModHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *MulModHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type ExpHandler struct {}
 func (oh *ExpHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.EXP)] = oh
 }
-func (oh *ExpHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *ExpHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *ExpHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *ExpHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataTwo {
         Op: OPExp,
         Value: stack[stackSize-1],
     }.Handle(db, state)
 }
-func (oh *ExpHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *ExpHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type SignExtendHandler struct {}
 func (oh *SignExtendHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.SIGNEXTEND)] = oh
 }
-func (oh *SignExtendHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *SignExtendHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *SignExtendHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *SignExtendHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataTwo {
         Op: OPSignExtend,
         Value: stack[stackSize-1],
     }.Handle(db, state)
 }
-func (oh *SignExtendHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *SignExtendHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type MulHandler struct {}
 func (oh *MulHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.MUL)] = oh
 }
-func (oh *MulHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *MulHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *MulHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *MulHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataTwo {
         Op: OPMul,
         Value: stack[stackSize-1],
     }.Handle(db, state)
 }
-func (oh *MulHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *MulHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type SubHandler struct {}
 func (oh *SubHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.SUB)] = oh
 }
-func (oh *SubHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *SubHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *SubHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *SubHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataTwo {
         Op: OPSub,
         Value: stack[stackSize-1],
     }.Handle(db, state)
 }
-func (oh *SubHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *SubHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type SHLHandler struct {}
 func (oh *SHLHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.SHL)] = oh
 }
-func (oh *SHLHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *SHLHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *SHLHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *SHLHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataTwo {
         Op: OPShl,
         Value: stack[stackSize-1],
     }.Handle(db, state)
 }
-func (oh *SHLHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *SHLHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type SHRHandler struct {}
 func (oh *SHRHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.SHR)] = oh
 }
-func (oh *SHRHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *SHRHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *SHRHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *SHRHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataTwo {
         Op: OPShr,
         Value: stack[stackSize-1],
     }.Handle(db, state)
 }
-func (oh *SHRHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *SHRHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type SARHandler struct {}
 func (oh *SARHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.SAR)] = oh
 }
-func (oh *SARHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *SARHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *SARHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *SARHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataTwo {
         Op: OPSar,
         Value: stack[stackSize-1],
     }.Handle(db, state)
 }
-func (oh *SARHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *SARHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type AndHandler struct {}
 func (oh *AndHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.AND)] = oh
 }
-func (oh *AndHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *AndHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *AndHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *AndHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataTwo {
         Op: OPAnd,
         Value: stack[stackSize-1],
     }.Handle(db, state)
 }
-func (oh *AndHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *AndHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type OrHandler struct {}
 func (oh *OrHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.OR)] = oh
 }
-func (oh *OrHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *OrHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *OrHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *OrHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataTwo {
         Op: OPOr,
         Value: stack[stackSize-1],
     }.Handle(db, state)
 }
-func (oh *OrHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *OrHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type XorHandler struct {}
 func (oh *XorHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.XOR)] = oh
 }
-func (oh *XorHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *XorHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *XorHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *XorHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataTwo {
         Op: OPXor,
         Value: stack[stackSize-1],
     }.Handle(db, state)
 }
-func (oh *XorHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *XorHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type GTHandler struct {}
 func (oh *GTHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.GT)] = oh
 }
-func (oh *GTHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *GTHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *GTHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *GTHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataTwo {
         Op: OPGt,
         Value: stack[stackSize-1],
     }.Handle(db, state)
 }
-func (oh *GTHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *GTHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type EQHandler struct {}
 func (oh *EQHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.EQ)] = oh
 }
-func (oh *EQHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *EQHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *EQHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *EQHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataTwo {
         Op: OPEq,
         Value: stack[stackSize-1],
     }.Handle(db, state)
 }
-func (oh *EQHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *EQHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type LTHandler struct {}
 func (oh *LTHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.LT)] = oh
 }
-func (oh *LTHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *LTHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *LTHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *LTHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataTwo {
         Op: OPLt,
         Value: stack[stackSize-1],
     }.Handle(db, state)
 }
-func (oh *LTHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *LTHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type SLTHandler struct {}
 func (oh *SLTHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.SLT)] = oh
 }
-func (oh *SLTHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *SLTHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *SLTHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *SLTHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataTwo {
         Op: OPSlt,
         Value: stack[stackSize-1],
     }.Handle(db, state)
 }
-func (oh *SLTHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *SLTHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type SGTHandler struct {}
 func (oh *SGTHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.SGT)] = oh
 }
-func (oh *SGTHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *SGTHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *SGTHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *SGTHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataTwo {
         Op: OPSgt,
         Value: stack[stackSize-1],
     }.Handle(db, state)
 }
-func (oh *SGTHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *SGTHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type KeccakHandler struct {
@@ -940,7 +940,7 @@ type KeccakHandler struct {
 func (oh *KeccakHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.KECCAK256)] = oh
 }
-func (oh *KeccakHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *KeccakHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     oh.data = DataKeccak {
         Offset: stack[stackSize-1].Uint64(),
         Size: stack[stackSize-2].Uint64(),
@@ -948,11 +948,11 @@ func (oh *KeccakHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint
 
     return DIRECTION_NONE
 }
-func (oh *KeccakHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *KeccakHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     oh.data.Result = stack[stackSize-1].Bytes32()
     oh.data.Handle(db, state)
 }
-func (oh *KeccakHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *KeccakHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type CallDataSizeHandler struct {
@@ -961,16 +961,16 @@ type CallDataSizeHandler struct {
 func (oh *CallDataSizeHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.CALLDATASIZE)] = oh
 }
-func (oh *CallDataSizeHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *CallDataSizeHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     oh.data = DataCalldataSize {}
 
     return DIRECTION_NONE
 }
-func (oh *CallDataSizeHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *CallDataSizeHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     oh.data.CalldataSize = stack[stackSize-1].Uint64()
     oh.data.Handle(db, state)
 }
-func (oh *CallDataSizeHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *CallDataSizeHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type CallDataCopyHandler struct {
@@ -979,7 +979,7 @@ type CallDataCopyHandler struct {
 func (oh *CallDataCopyHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.CALLDATACOPY)] = oh
 }
-func (oh *CallDataCopyHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *CallDataCopyHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     dataOffset64, overflow := stack[stackSize-2].Uint64WithOverflow()
     if overflow {
         dataOffset64 = 0xffffffffffffffff
@@ -992,10 +992,10 @@ func (oh *CallDataCopyHandler) Before(db *SimpleDB, state *TransactionDB, stack 
 
     return DIRECTION_NONE
 }
-func (oh *CallDataCopyHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *CallDataCopyHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     oh.data.Handle(db, state)
 }
-func (oh *CallDataCopyHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *CallDataCopyHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type CallDataLoadHandler struct {
@@ -1004,7 +1004,7 @@ type CallDataLoadHandler struct {
 func (oh *CallDataLoadHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.CALLDATALOAD)] = oh
 }
-func (oh *CallDataLoadHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *CallDataLoadHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     offset64, overflow := stack[stackSize-1].Uint64WithOverflow()
     if overflow {
         offset64 = 0xffffffffffffffff
@@ -1015,40 +1015,40 @@ func (oh *CallDataLoadHandler) Before(db *SimpleDB, state *TransactionDB, stack 
 
     return DIRECTION_NONE
 }
-func (oh *CallDataLoadHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *CallDataLoadHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     oh.data.Handle(db, state)
 }
-func (oh *CallDataLoadHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *CallDataLoadHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type ReturnDataSizeHandler struct {}
 func (oh *ReturnDataSizeHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.RETURNDATASIZE)] = oh
 }
-func (oh *ReturnDataSizeHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {    
+func (oh *ReturnDataSizeHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {    
     return DIRECTION_NONE
 }
-func (oh *ReturnDataSizeHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *ReturnDataSizeHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataReturndataSize {
         ReturndataSize: stack[stackSize-1].Uint64(),
     }.Handle(db, state)
 }
-func (oh *ReturnDataSizeHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *ReturnDataSizeHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type BalanceHandler struct {}
 func (oh *BalanceHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.BALANCE)] = oh
 }
-func (oh *BalanceHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *BalanceHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *BalanceHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *BalanceHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataBalance {
         Balance: stack[stackSize-1],
     }.Handle(db, state)
 }
-func (oh *BalanceHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *BalanceHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type ExtCodeCopyHandler struct {
@@ -1057,7 +1057,7 @@ type ExtCodeCopyHandler struct {
 func (oh *ExtCodeCopyHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.EXTCODECOPY)] = oh
 }
-func (oh *ExtCodeCopyHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *ExtCodeCopyHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     uint64CodeOffset, overflow := stack[stackSize-3].Uint64WithOverflow()
     if overflow {
         uint64CodeOffset = 0xffffffffffffffff
@@ -1071,10 +1071,10 @@ func (oh *ExtCodeCopyHandler) Before(db *SimpleDB, state *TransactionDB, stack [
 
     return DIRECTION_NONE
 }
-func (oh *ExtCodeCopyHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *ExtCodeCopyHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     oh.data.Handle(db, state)
 }
-func (oh *ExtCodeCopyHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *ExtCodeCopyHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type ReturnDataCopyHandler struct {
@@ -1083,7 +1083,7 @@ type ReturnDataCopyHandler struct {
 func (oh *ReturnDataCopyHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.RETURNDATACOPY)] = oh
 }
-func (oh *ReturnDataCopyHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *ReturnDataCopyHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     oh.data = DataReturndataCopy {
         MemoryOffset: stack[stackSize-1].Uint64(),
         DataOffset: stack[stackSize-2].Uint64(),
@@ -1092,72 +1092,72 @@ func (oh *ReturnDataCopyHandler) Before(db *SimpleDB, state *TransactionDB, stac
 
     return DIRECTION_NONE
 }
-func (oh *ReturnDataCopyHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *ReturnDataCopyHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     oh.data.Handle(db, state)
 }
-func (oh *ReturnDataCopyHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *ReturnDataCopyHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type OriginHandler struct {}
 func (oh *OriginHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.ORIGIN)] = oh
 }
-func (oh *OriginHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *OriginHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *OriginHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *OriginHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataConstant20 {
         Op: OPOrigin,
         Value: stack[stackSize-1],
     }.Handle(db, state)
 }
-func (oh *OriginHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *OriginHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type CallerHandler struct {}
 func (oh *CallerHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.CALLER)] = oh
 }
-func (oh *CallerHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *CallerHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *CallerHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *CallerHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataConstant20 {
         Op: OPCaller,
         Value: stack[stackSize-1],
     }.Handle(db, state)
 }
-func (oh *CallerHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *CallerHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type CodeSizeHandler struct {}
 func (oh *CodeSizeHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.CODESIZE)] = oh
 }
-func (oh *CodeSizeHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *CodeSizeHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *CodeSizeHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *CodeSizeHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataCodeSize {
         CodeSize: stack[stackSize-1].Uint64(),
     }.Handle(db, state)
 }
-func (oh *CodeSizeHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *CodeSizeHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type GasPriceHandler struct {}
 func (oh *GasPriceHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.GASPRICE)] = oh
 }
-func (oh *GasPriceHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *GasPriceHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *GasPriceHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *GasPriceHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataConstant {
         Value: stack[stackSize-1],
     }.Handle(db, state)
 }
-func (oh *GasPriceHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *GasPriceHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type ExtCodeHashHandler struct {
@@ -1166,176 +1166,176 @@ type ExtCodeHashHandler struct {
 func (oh *ExtCodeHashHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.EXTCODEHASH)] = oh
 }
-func (oh *ExtCodeHashHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *ExtCodeHashHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     oh.data = DataExtCodeHash {
         Address: stack[stackSize-1].Bytes20(),
     }
 
     return DIRECTION_NONE
 }
-func (oh *ExtCodeHashHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *ExtCodeHashHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     oh.data.Hash = stack[stackSize-1].Bytes32()
     oh.data.Handle(db, state)
 }
-func (oh *ExtCodeHashHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *ExtCodeHashHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type BlockHashHandler struct {}
 func (oh *BlockHashHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.BLOCKHASH)] = oh
 }
-func (oh *BlockHashHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *BlockHashHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *BlockHashHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *BlockHashHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataBlockHash {
         Hash: stack[stackSize-1].Bytes32(),
     }.Handle(db, state)
 }
-func (oh *BlockHashHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *BlockHashHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type CoinbaseHandler struct {}
 func (oh *CoinbaseHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.COINBASE)] = oh
 }
-func (oh *CoinbaseHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *CoinbaseHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *CoinbaseHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *CoinbaseHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataConstant20 {
         Op: OPCoinbase,
         Value: stack[stackSize-1],
     }.Handle(db, state)
 }
-func (oh *CoinbaseHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *CoinbaseHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type TimestampHandler struct {}
 func (oh *TimestampHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.TIMESTAMP)] = oh
 }
-func (oh *TimestampHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *TimestampHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *TimestampHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *TimestampHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataConstant {
         Op: OPTimestamp,
         Value: stack[stackSize-1],
     }.Handle(db, state)
 }
-func (oh *TimestampHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *TimestampHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type NumberHandler struct {}
 func (oh *NumberHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.NUMBER)] = oh
 }
-func (oh *NumberHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *NumberHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *NumberHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *NumberHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataConstant {
         Op: OPNumber,
         Value: stack[stackSize-1],
     }.Handle(db, state)
 }
-func (oh *NumberHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *NumberHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type GasLimitHandler struct {}
 func (oh *GasLimitHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.GASLIMIT)] = oh
 }
-func (oh *GasLimitHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *GasLimitHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *GasLimitHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *GasLimitHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataConstant {
         Op: OPGasLimit,
         Value: stack[stackSize-1],
     }.Handle(db, state)
 }
-func (oh *GasLimitHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *GasLimitHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type ChainIDHandler struct {}
 func (oh *ChainIDHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.CHAINID)] = oh
 }
-func (oh *ChainIDHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *ChainIDHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *ChainIDHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *ChainIDHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataConstant {
         Op: OPChainID,
         Value: stack[stackSize-1],
     }.Handle(db, state)
 }
-func (oh *ChainIDHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *ChainIDHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type SelfBalanceHandler struct {}
 func (oh *SelfBalanceHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.SELFBALANCE)] = oh
 }
-func (oh *SelfBalanceHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *SelfBalanceHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *SelfBalanceHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *SelfBalanceHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataSelfBalance {
         Balance: stack[stackSize-1],
     }.Handle(db, state)
 }
-func (oh *SelfBalanceHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *SelfBalanceHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type BaseFeeHandler struct {}
 func (oh *BaseFeeHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.BASEFEE)] = oh
 }
-func (oh *BaseFeeHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *BaseFeeHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *BaseFeeHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *BaseFeeHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataConstant {
         Op: OPBaseFee,
         Value: stack[stackSize-1],
     }.Handle(db, state)
 }
-func (oh *BaseFeeHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *BaseFeeHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type PCHandler struct {}
 func (oh *PCHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.PC)] = oh
 }
-func (oh *PCHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *PCHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *PCHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *PCHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataConstant {
         Op: OPPc,
         Value: stack[stackSize-1],
     }.Handle(db, state)
 }
-func (oh *PCHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *PCHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type MSizeHandler struct {}
 func (oh *MSizeHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.MSIZE)] = oh
 }
-func (oh *MSizeHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *MSizeHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *MSizeHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *MSizeHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataConstant {
         Op: OPMsize,
         Value: stack[stackSize-1],
     }.Handle(db, state)
 }
-func (oh *MSizeHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *MSizeHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type LogHandler struct {
@@ -1346,7 +1346,7 @@ func (oh *LogHandler) Register(handlers map[byte]OPHandler) {
         handlers[byte(i)] = oh
     }
 }
-func (oh *LogHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *LogHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     oh.data = DataLog {
         Offset: stack[stackSize-1].Uint64(),
         Size: stack[stackSize-2].Uint64(),
@@ -1354,10 +1354,10 @@ func (oh *LogHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256
     }
     return DIRECTION_NONE
 }
-func (oh *LogHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *LogHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     oh.data.Handle(db, state)
 }
-func (oh *LogHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *LogHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type CallHandler struct {
@@ -1366,7 +1366,7 @@ type CallHandler struct {
 func (oh *CallHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.CALL)] = oh
 }
-func (oh *CallHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *CallHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     DataCallStart {
         N: 7,
         Address: stack[stackSize-2].Bytes20(),
@@ -1382,9 +1382,9 @@ func (oh *CallHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint25
 
     return DIRECTION_CALL
 }
-func (oh *CallHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {}
-func (oh *CallHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {
-    oh.DataEnd.Success = err == nil
+func (oh *CallHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {}
+func (oh *CallHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {
+    oh.DataEnd.Success = success
     oh.DataEnd.Handle(db, state)
 }
 
@@ -1395,7 +1395,7 @@ type CallCodeHandler struct {
 func (oh *CallCodeHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.CALLCODE)] = oh
 }
-func (oh *CallCodeHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *CallCodeHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     DataCallStart {
         N: 7,
         Address: scope.Address(),
@@ -1411,9 +1411,9 @@ func (oh *CallCodeHandler) Before(db *SimpleDB, state *TransactionDB, stack []ui
 
     return DIRECTION_CALL
 }
-func (oh *CallCodeHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {}
-func (oh *CallCodeHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {
-    oh.DataEnd.Success = err == nil
+func (oh *CallCodeHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {}
+func (oh *CallCodeHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {
+    oh.DataEnd.Success = success
     oh.DataEnd.Handle(db, state)
 }
 
@@ -1424,7 +1424,7 @@ type DelegateCallHandler struct {
 func (oh *DelegateCallHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.DELEGATECALL)] = oh
 }
-func (oh *DelegateCallHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *DelegateCallHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     DataCallStart {
         N: 6,
         Address: scope.Address(),
@@ -1440,9 +1440,9 @@ func (oh *DelegateCallHandler) Before(db *SimpleDB, state *TransactionDB, stack 
 
     return DIRECTION_CALL
 }
-func (oh *DelegateCallHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {}
-func (oh *DelegateCallHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {
-    oh.DataEnd.Success = err == nil
+func (oh *DelegateCallHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {}
+func (oh *DelegateCallHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {
+    oh.DataEnd.Success = success
     oh.DataEnd.Handle(db, state)
 }
 
@@ -1453,7 +1453,7 @@ type StaticCallHandler struct {
 func (oh *StaticCallHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.STATICCALL)] = oh
 }
-func (oh *StaticCallHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *StaticCallHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     DataCallStart {
         N: 6,
         Address: stack[stackSize-2].Bytes20(),
@@ -1469,9 +1469,9 @@ func (oh *StaticCallHandler) Before(db *SimpleDB, state *TransactionDB, stack []
 
     return DIRECTION_CALL
 }
-func (oh *StaticCallHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {}
-func (oh *StaticCallHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {
-    oh.DataEnd.Success = err == nil
+func (oh *StaticCallHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {}
+func (oh *StaticCallHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {
+    oh.DataEnd.Success = success
     oh.DataEnd.Handle(db, state)
 }
 
@@ -1482,7 +1482,7 @@ type CreateHandler struct {
 func (oh *CreateHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.CREATE)] = oh
 }
-func (oh *CreateHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *CreateHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     addr := crypto.CreateAddress(scope.Address(), stateDB.GetNonce(scope.Address())) // 1 is nonce
     
     offset := stack[stackSize-2].Uint64()
@@ -1513,8 +1513,8 @@ func (oh *CreateHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint
 
     return DIRECTION_CALL
 }
-func (oh *CreateHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {}
-func (oh *CreateHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {
+func (oh *CreateHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {}
+func (oh *CreateHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {
     oh.DataEnd.Handle(db, state)
 }
 
@@ -1525,7 +1525,7 @@ type Create2Handler struct {
 func (oh *Create2Handler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.CREATE2)] = oh
 }
-func (oh *Create2Handler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *Create2Handler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     offset := stack[stackSize-2].Uint64()
     size := stack[stackSize-3].Uint64()
 
@@ -1557,8 +1557,8 @@ func (oh *Create2Handler) Before(db *SimpleDB, state *TransactionDB, stack []uin
 
     return DIRECTION_CALL
 }
-func (oh *Create2Handler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {}
-func (oh *Create2Handler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {
+func (oh *Create2Handler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {}
+func (oh *Create2Handler) Exit(db *SimpleDB, state *TransactionDB, success bool) {
     oh.DataEnd.Handle(db, state)
 }
 
@@ -1569,7 +1569,7 @@ type MCopyHandler struct {
 func (oh *MCopyHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.MCOPY)] = oh
 }
-func (oh *MCopyHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *MCopyHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     oh.data = DataMCopy {
         ToOffset: stack[stackSize-1].Uint64(),
         FromOffset: stack[stackSize-2].Uint64(),
@@ -1578,41 +1578,41 @@ func (oh *MCopyHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint2
 
     return DIRECTION_NONE
 }
-func (oh *MCopyHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *MCopyHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     oh.data.Handle(db, state)
 }
-func (oh *MCopyHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *MCopyHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type BlobBaseFeeHandler struct {}
 func (oh *BlobBaseFeeHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.BLOBBASEFEE)] = oh
 }
-func (oh *BlobBaseFeeHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *BlobBaseFeeHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *BlobBaseFeeHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *BlobBaseFeeHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataConstant {
         Op: OPBlobBaseFee,
         Value: stack[stackSize-1],
     }.Handle(db, state)
 }
-func (oh *BlobBaseFeeHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *BlobBaseFeeHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type BlobHashHandler struct {}
 func (oh *BlobHashHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.BLOBHASH)] = oh
 }
-func (oh *BlobHashHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *BlobHashHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *BlobHashHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *BlobHashHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     DataBlobHash {
         Hash: stack[stackSize-1].Bytes32(),
     }.Handle(db, state)
 }
-func (oh *BlobHashHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *BlobHashHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type PrevrandaoOrDifficultyHandler struct {
@@ -1621,10 +1621,10 @@ type PrevrandaoOrDifficultyHandler struct {
 func (oh *PrevrandaoOrDifficultyHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.PREVRANDAO)] = oh
 }
-func (oh *PrevrandaoOrDifficultyHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *PrevrandaoOrDifficultyHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     return DIRECTION_NONE
 }
-func (oh *PrevrandaoOrDifficultyHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+func (oh *PrevrandaoOrDifficultyHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {
     var operand uint8
     if chainConfig.IsLondon(number) {
         operand = OPRandom
@@ -1636,7 +1636,7 @@ func (oh *PrevrandaoOrDifficultyHandler) After(db *SimpleDB, state *TransactionD
         Value: stack[stackSize-1],
     }.Handle(db, state)
 }
-func (oh *PrevrandaoOrDifficultyHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *PrevrandaoOrDifficultyHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 
 type SelfdestructHandler struct {
@@ -1645,7 +1645,7 @@ type SelfdestructHandler struct {
 func (oh *SelfdestructHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(vm.SELFDESTRUCT)] = oh
 }
-func (oh *SelfdestructHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) int {
+func (oh *SelfdestructHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) int {
     if chainConfig.IsCancun(number, time) {
         DataSelfdestruct6780 {}.Handle(db, state)
     } else {
@@ -1654,5 +1654,5 @@ func (oh *SelfdestructHandler) Before(db *SimpleDB, state *TransactionDB, stack 
 
     return DIRECTION_RETURN
 }
-func (oh *SelfdestructHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {}
-func (oh *SelfdestructHandler) Exit(db *SimpleDB, state *TransactionDB, depth int, output []byte, gasUsed uint64, err error, reverted bool) {}
+func (oh *SelfdestructHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB tracing.StateDB, chainConfig *params.ChainConfig, number *big.Int, time uint64, pc uint64, op byte, scope tracing.OpContext) {}
+func (oh *SelfdestructHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}

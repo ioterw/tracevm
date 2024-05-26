@@ -137,7 +137,7 @@ func (t *Dep) OnTxStart(vm *tracing.VMContext, tx *types.Transaction, from commo
         addr = *tx.To()
     }
 
-    startData := dep_tracer.DataStart{
+    startData := dep_tracer.DataStart {
         IsCreate: create,
         Address: addr,
         Input: tx.Data(),
@@ -172,7 +172,7 @@ func (t *Dep) OnOpcode(pc uint64, op byte, gas, cost uint64, scope tracing.OpCon
     stackSize := len(stack)
 
     if t.prevOPHandler != nil {
-        t.prevOPHandler.After(t.db, t.state, stack, stackSize, t.stateDB, t.chainConfig, t.blockNumber, t.time, pc, op, gas, cost, scope, rData, depth, err)
+        t.prevOPHandler.After(t.db, t.state, stack, stackSize, t.stateDB, t.chainConfig, t.blockNumber, t.time, pc, op, scope)
         t.prevOPHandler = nil
     }
 
@@ -198,7 +198,7 @@ func (t *Dep) OnOpcode(pc uint64, op byte, gas, cost uint64, scope tracing.OpCon
     }
 
     if opHandler, ok := t.opHandlers[op]; ok {
-        direction := opHandler.Before(t.db, t.state, stack, stackSize, t.stateDB, t.chainConfig, t.blockNumber, t.time, pc, op, gas, cost, scope, rData, depth, err)
+        direction := opHandler.Before(t.db, t.state, stack, stackSize, t.stateDB, t.chainConfig, t.blockNumber, t.time, pc, op, scope)
         switch direction {
         case dep_tracer.DIRECTION_NONE:
             t.prevOPHandler = opHandler
@@ -290,5 +290,5 @@ func (t *Dep) OnExit(depth int, output []byte, gasUsed uint64, err error, revert
     newSize := len(t.retHandlers) - 1
     handler := t.retHandlers[newSize]
     t.retHandlers = t.retHandlers[:newSize]
-    handler.Exit(t.db, t.state, depth, output, gasUsed, err, reverted)
+    handler.Exit(t.db, t.state, err == nil)
 }
