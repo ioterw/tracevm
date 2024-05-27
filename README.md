@@ -78,10 +78,6 @@ Also there is a full formula, which computes all needed data from initial initco
     "logger": {
         // _short postfix generally counts only cryptographic formulas (sha256, keccak etc.)
         // as significant, other formulas are folded 
-        "opcodes_short": {},
-        // has the following format: {"256":true}, logs all opcode numbers which are true
-        // (even if reverted, better not to use now)
-        "opcodes": {},
         "final_slots_short": true,
         // outputs final slots which are set at the end of transaction
         "final_slots": true,
