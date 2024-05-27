@@ -25,6 +25,10 @@ func SetupDB(kvEngine, kvRoot string, toLog *LoggerDefinition, pastUnknown bool,
         toLog.SolViewFinalSlots = true
     }
 
+    if kvEngine == "amnesia" {
+        pastUnknown = true
+    }
+
     return SimpleDBNew(
         protected, *toLog,
         kvEngine, kvRoot,

@@ -75,14 +75,14 @@ func SimpleDBNew(
         s.saveFormula(ConstantZero)
         single_instances[formulasName] = s.formulasDB
     }
-    s.formulasWithShorts = make(map[common.Hash]*CommitFormula)
-    s.formulas           = make(map[common.Hash]*CommitFormula)
 
     s.shorts = make([]*Shorterner, 0)
     for _, def := range protectedDifinitions {
         s.shorts = append(s.shorts, NewShorterner(s, kvEngine, kvRoot, single_instances, def))
     }
     
+    s.ResetFormulas()
+
     s.slotsDB      = NewDB(kvEngine, kvRoot, "slots")
     s.codesDB      = NewDB(kvEngine, kvRoot, "codes")
     s.codeHashesDB = NewDB(kvEngine, kvRoot, "code_hashes")
@@ -178,10 +178,11 @@ func (s *SimpleDB) CommitFormulaWithShorts(hash common.Hash) {
 func (s *SimpleDB) ResetFormulas() {
     s.formulasWithShorts = make(map[common.Hash]*CommitFormula)
     s.formulas           = make(map[common.Hash]*CommitFormula)
+    s.formulas[ConstantInitZero.hash] = &CommitFormula{ConstantInitZero, true}
+    s.formulas[ConstantZero.hash] = &CommitFormula{ConstantZero, true}
     for _, short := range s.shorts {
         short.Reset()
     }
-    // s.DebugPrintAllFormulas()
 }
 
 func (s *SimpleDB) GetFormulaWithShorts(hash common.Hash) Formula {
