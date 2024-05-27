@@ -470,12 +470,11 @@ func (s *SimpleDB) GetAddressVersion(addr common.Address) uint64 {
     return binary.BigEndian.Uint64(val)
 }
 
-func (s *SimpleDB) IncreaseAddressVersion(addr common.Address) uint64 {
+func (s *SimpleDB) IncreaseAddressVersion(addr common.Address) {
     version := s.GetAddressVersion(addr) + 1
     versionBin := []byte{}
     versionBin = binary.BigEndian.AppendUint64(versionBin, version)
     s.versionsDB.Set(addr[:], versionBin)
-    return version
 }
 
 func (s *SimpleDB) GetSlot(addr common.Address, slot *uint256.Int, value common.Hash) []DEPByte {
