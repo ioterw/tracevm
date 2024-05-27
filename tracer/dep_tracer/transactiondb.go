@@ -113,7 +113,7 @@ func (t *TransactionDB) Commit() {
     t.curState().overlayDB.Commit()
     t.curState().CommitLogs()
     t.simpleDB.CommitDEPBytesWithShorts(t.returndata)
-    
+
     t.simpleDB.ResetFormulas()
 }
 
