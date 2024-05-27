@@ -6,7 +6,7 @@ import (
     "github.com/ethereum/go-ethereum/common"
 )
 
-func SetupDB(kvEngine, kvRoot string, toLog *LoggerDefinition, pastUnknown bool, writer OutputWriter) *SimpleDB {
+func SetupDB(kvAmnesia bool, kvEngine, kvRoot string, toLog *LoggerDefinition, pastUnknown bool, writer OutputWriter) *SimpleDB {
     protected := []ProtectedDefinition{}
     protected = append(protected, CryptoProtectedDefinition())
 
@@ -25,9 +25,12 @@ func SetupDB(kvEngine, kvRoot string, toLog *LoggerDefinition, pastUnknown bool,
         toLog.SolViewFinalSlots = true
     }
 
+    if kvAmnesia {
+        pastUnknown = true
+    }
     return SimpleDBNew(
         protected, *toLog,
-        kvEngine, kvRoot,
+        kvAmnesia, kvEngine, kvRoot,
         pastUnknown,
         writer,
     )
