@@ -8,7 +8,7 @@ This tool is used to track the values and addresses of slots (storage variables 
 
 ## Building
 
-Python is required to run the TracEVM.
+Python is required to run TracEVM.
 
 Additionally, [Geth prerequisites](https://geth.ethereum.org/docs/getting-started/installing-geth#build-from-source) are required to compile Geth.
 
