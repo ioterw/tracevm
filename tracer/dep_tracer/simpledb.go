@@ -29,7 +29,6 @@ type SimpleDB struct {
     logger             Logger
     writer             OutputWriter
     pastUnknown        bool
-    amnesia            bool
 }
 
 func CodeHash(code []byte) common.Hash {
@@ -61,7 +60,7 @@ func codeLocation(addr common.Address, version uint64, pos uint64) []byte {
 func SimpleDBNew(
     protectedDifinitions []ProtectedDefinition,
     toLog LoggerDefinition,
-    kvAmnesia bool, kvEngine, kvRoot string,
+    kvEngine, kvRoot string,
     pastUnknown bool,
     writer OutputWriter,
 ) *SimpleDB {
@@ -93,7 +92,6 @@ func SimpleDBNew(
     s.writer = writer
 
     s.pastUnknown = pastUnknown
-    s.amnesia = kvAmnesia
 
     return s
 }

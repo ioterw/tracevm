@@ -90,7 +90,6 @@ func (db LevelDB) DumpAllDebug() map[string][]byte {
 }
 
 
-
 var riakDB *riak.Client = nil
 type RiakDB struct {
     name string

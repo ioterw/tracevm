@@ -48,7 +48,6 @@ func newDep(cfg json.RawMessage) (*tracing.Hooks, error) {
         KV struct {
             Engine  string `json:"engine"`
             Root    string `json:"root"`
-            Amnesia bool   `json:"amnesia"`
         } `json:"kv"`
         Logger      *dep_tracer.LoggerDefinition `json:"logger,omitempty"`
         Output      string                       `json:"output"`
@@ -61,13 +60,11 @@ func newDep(cfg json.RawMessage) (*tracing.Hooks, error) {
             return nil, fmt.Errorf("failed to parse config: %v", err)
         }
     }
-    if !config.KV.Amnesia {
-        if config.KV.Engine == "" {
-            panic("kv engine is not set")
-        }
-        if config.KV.Root == "" {
-            panic("kv root (path) is not set")
-        }
+    if config.KV.Engine == "" {
+        panic("kv engine is not set")
+    }
+    if config.KV.Root == "" {
+        panic("kv root (path) is not set")
     }
     var writer dep_tracer.OutputWriter
     if config.Output == "" {
@@ -77,7 +74,6 @@ func newDep(cfg json.RawMessage) (*tracing.Hooks, error) {
     }
 
     db := dep_tracer.SetupDB(
-        config.KV.Amnesia,
         config.KV.Engine,
         config.KV.Root,
         config.Logger,
