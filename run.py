@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 import os, subprocess, json, sys
-import webview.app
 
 def popen(*args, **kwargs):
     p = subprocess.Popen(*args, **kwargs)
@@ -15,13 +14,7 @@ def handle_config(config_path):
         config = json.load(f)
     return config
 
-def run_server(config):
-    app_path = os.path.dirname(os.path.abspath(__file__)) + '/webview/app.py'
-    p = subprocess.Popen(['python3', app_path, config['output']], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    return p
-
 def run_geth(config):
-    vmtrace_option = []
     geth_path = os.path.dirname(os.path.abspath(__file__)) + '/geth'
     popen([
         geth_path,

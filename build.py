@@ -29,7 +29,6 @@ def main():
     shutil.copy('run.py', 'build')
     shutil.copy('geth', 'build')
     shutil.copy('conf.json', 'build')
-    shutil.copytree('webview', 'build/webview')
 
 if __name__ == '__main__':
     main()
