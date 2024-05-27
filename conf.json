@@ -17,5 +17,5 @@
         "sol_view": true
     },
     "output": "out.txt",
-    "past_unknown": false
+    "past_unknown": true
 }

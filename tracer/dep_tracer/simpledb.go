@@ -522,19 +522,23 @@ func (s *SimpleDB) GetCode(addr common.Address, code []byte) (common.Hash, commo
         copy(initcodeHash[:], codeHashData[32:])
     }
 
-    var res []DEPByte
-    if s.pastUnknown {
-        res = FormulaDEPBytes(s.ConstantNewWithShorts(OPUnknownCode, code))
-    } else {
-        res = make([]DEPByte, 0)
-        for i := 0; i < len(code); i++ {
-            location := codeLocation(addr, version, uint64(i))
-            val := s.codesDB.Get(location, true)
-            if val == nil {
-                panic("was not able to read the whole code of contract")
-            }
-            res = append(res, DEPByteFromBin(val))
+    if s.pastUnknown && len(code) > 0 {
+        location := codeLocation(addr, version, 0)
+        val := s.codesDB.Get(location, true)
+        if val == nil {
+            res := FormulaDEPBytes(s.ConstantNewWithShorts(OPUnknownCode, code))
+            return codeHash, initcodeHash, res
         }
+    }
+    
+    res := make([]DEPByte, 0)
+    for i := 0; i < len(code); i++ {
+        location := codeLocation(addr, version, uint64(i))
+        val := s.codesDB.Get(location, true)
+        if val == nil {
+            panic("was not able to read the whole code of contract")
+        }
+        res = append(res, DEPByteFromBin(val))
     }
     return codeHash, initcodeHash, res
 }
