@@ -21,6 +21,8 @@ func NewDB(engine, root, name string) DB {
         return NewRiakDB(root, name)
     case "memory":
         return NewMemoryDB()
+    case "amnesia":
+        return NewAmnesiaDB()
     default:
         panic("unknown engine")
     }
@@ -213,3 +215,24 @@ func (db MemoryDB) DumpAllDebug() map[string][]byte {
     return db.data
 }
 
+
+type AmnesiaDB struct {}
+
+func NewAmnesiaDB() AmnesiaDB {
+    return AmnesiaDB{}
+}
+
+func (db AmnesiaDB) Get(key []byte, optional bool) []byte {
+    if optional {
+        return nil
+    }
+    panic("key not found")
+}
+
+func (db AmnesiaDB) Set(key, value []byte) {}
+
+func (db AmnesiaDB) Delete(key []byte) {}
+
+func (db AmnesiaDB) DumpAllDebug() map[string][]byte {
+    return map[string][]byte{}
+}
