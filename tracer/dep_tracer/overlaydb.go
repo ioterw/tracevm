@@ -121,11 +121,7 @@ func (o *OverlayDB) GetTransient(addr common.Address, slot *uint256.Int) []DEPBy
     if ok {
         return val
     }
-    val = []DEPByte{}
-    b := DEPByte{0, ConstantInitZero.hash}
-    for i := 0; i < 32; i++ {
-        val = append(val, b)
-    }
+    val = InitDEPBytes(32)
     o.transient[key] = val
     return val
 }
