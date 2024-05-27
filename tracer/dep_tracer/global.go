@@ -10,20 +10,7 @@ func SetupDB(kvEngine, kvRoot string, toLog *LoggerDefinition, pastUnknown bool,
     protected := []ProtectedDefinition{}
     protected = append(protected, CryptoProtectedDefinition())
 
-    if toLog == nil {
-        toLog = NewLoggerDefinition()
-        // toLog.AddOpcdesShort([]uint8{OPSLoad, OPSStore}) // it can be reverted
-        // toLog.AddOpcdesFull([]uint8{OPSLoad, OPSStore})
-        toLog.FinalSlotsShort = true
-        toLog.FinalSlotsFull = true
-        // toLog.CodesShort = true
-        // toLog.CodesFull = true
-        // toLog.ReturnDataShort = true
-        toLog.ReturnDataFull  = true
-        toLog.LogsFull = true
-        // toLog.LogsShort  = true
-        toLog.SolViewFinalSlots = true
-    }
+    toLog = NewLoggerDefinition(toLog)
 
     if kvEngine == "amnesia" {
         pastUnknown = true

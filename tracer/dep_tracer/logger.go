@@ -2,6 +2,7 @@ package dep_tracer
 
 import (
     "strings"
+    "strconv"
     "math/big"
     "encoding/hex"
     "encoding/json"
@@ -11,8 +12,11 @@ import (
 )
 
 type LoggerDefinition struct {
-    OpcodesShort      map[uint8]bool `json:"opcodes_short"`
-    OpcodesFull       map[uint8]bool `json:"opcodes"`
+    OpcodesShort      []string       `json:"opcodes_short"`
+    OpcodesFull       []string       `json:"opcodes"`
+    opcodesShort      map[uint64]bool
+    opcodesFull       map[uint64]bool
+
     FinalSlotsShort   bool           `json:"final_slots_short"`
     FinalSlotsFull    bool           `json:"final_slots"`
     CodesShort        bool           `json:"codes_short"`
@@ -24,42 +28,46 @@ type LoggerDefinition struct {
     SolViewFinalSlots bool           `json:"sol_view"`
 }
 
-func NewLoggerDefinition() *LoggerDefinition {
-    ld := &LoggerDefinition{}
-
-    ld.OpcodesShort    = make(map[uint8]bool)
-    ld.OpcodesFull     = make(map[uint8]bool)
-    ld.FinalSlotsShort = false
-    ld.FinalSlotsFull  = false
-    ld.CodesShort      = false
-    ld.CodesFull       = false
-    ld.ReturnDataShort = false
-    ld.ReturnDataFull  = false
-    ld.LogsShort       = false
-    ld.LogsFull        = false
-
+func NewLoggerDefinition(ld *LoggerDefinition) *LoggerDefinition {
+    if ld == nil {
+        ld.OpcodesShort      = []string{}
+        ld.OpcodesFull       = []string{}
+        ld.FinalSlotsShort   = true
+        ld.FinalSlotsFull    = true
+        ld.CodesShort        = false
+        ld.CodesFull         = false
+        ld.ReturnDataShort   = false
+        ld.ReturnDataFull    = true
+        ld.LogsShort         = false
+        ld.LogsFull          = true
+        ld.SolViewFinalSlots = true
+    }
+    ld.opcodesShort      = map[uint64]bool{}
+    ld.opcodesFull       = map[uint64]bool{}
+    for _, op := range ld.OpcodesShort {
+        val, err := strconv.ParseUint(op, 16, 16)
+        if err != nil {
+            panic(err)
+        }
+        ld.opcodesShort[val] = true
+    }
+    for _, op := range ld.OpcodesFull {
+        val, err := strconv.ParseUint(op, 16, 16)
+        if err != nil {
+            panic(err)
+        }
+        ld.opcodesFull[val] = true
+    }
     return ld
 }
 
-func (ld *LoggerDefinition) AddOpcdesFull(opcodes []uint8) {
-    for _, opcode := range opcodes {
-        ld.OpcodesFull[opcode] = true
-    }
-}
-
-func (ld *LoggerDefinition) AddOpcdesShort(opcodes []uint8) {
-    for _, opcode := range opcodes {
-        ld.OpcodesShort[opcode] = true
-    }
-}
-
 func (ld *LoggerDefinition) OpcodeFull(opcode uint8) bool {
-    _, ok := ld.OpcodesFull[opcode]
+    _, ok := ld.opcodesFull[uint64(opcode)]
     return ok
 }
 
 func (ld *LoggerDefinition) OpcodeShort(opcode uint8) bool {
-    _, ok := ld.OpcodesShort[opcode]
+    _, ok := ld.opcodesShort[uint64(opcode)]
     return ok
 }
 

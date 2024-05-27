@@ -4,8 +4,6 @@
         "root": ""
     },
     "logger": {
-        "opcodes_short": {},
-        "opcodes": {},
         "final_slots_short": true,
         "final_slots": true,
         "codes_short": false,
