@@ -8,11 +8,7 @@ This tool is used to track the values and addresses of slots (storage variables 
 
 ## Building
 
-Python and Flask are required to run the web view.
-
-```bash
-pip3 install Flask
-```
+Python is required to run TracEVM.
 
 Additionally, [Geth prerequisites](https://geth.ethereum.org/docs/getting-started/installing-geth#build-from-source) are required to compile Geth.
 
@@ -66,6 +62,52 @@ Also there is a full formula, which computes all needed data from initial initco
 
 ![](images/sample3.png)
 
-## Found bug?
+## Editing config
+
+```Javascript
+{
+    "kv": {
+        // Possible values for engine:
+        // memory: data is stored in memory (root is ignored)
+        // leveldb: data is stored in leveldb (root is path for leveldb folders)
+        // riak: data is stored in riak (root is riak address)
+        // amnesia: data is not stored (root is ignored, past_unknown is switched to true)
+        "engine": "memory",
+        "root": ""
+    },
+    "logger": {
+        // _short postfix generally counts only cryptographic formulas (sha256, keccak etc.)
+        // as significant, other formulas are folded 
+        "opcodes_short": {},
+        // has the following format: {"256":true}, logs all opcode numbers which are true
+        // (even if reverted, better not to use now)
+        "opcodes": {},
+        "final_slots_short": true,
+        // outputs final slots which are set at the end of transaction
+        "final_slots": true,
+        "codes_short": false,
+        // outputs code of contracts which is set at the end of transaction
+        "codes": false,
+        "return_data_short": false,
+        // outputs return data at the end of transaction
+        "return_data": true,
+        "logs_short": false,
+        // outputs logs (events)
+        "logs": true,
+        // outputs solidity view of final slots (final_slots should be enabled)
+        "sol_view": true
+    },
+    // Possible values:
+    // path to output file
+    // if starts with "http://", starts http server on specified address
+    // if empty, outputs to terminal
+    "output": "http://127.0.0.1:4334",
+    // special mode, if enabled TracEVM thinks that there are some slots or code which
+    // existed before, therefore unknown, so it is marked as UNKNOWNSLOT or UNKNOWNCODE
+    "past_unknown": false
+}
+```
+
+## Found a bug?
 
 Please open an [issue](https://github.com/ioterw/tracevm/issues) and supply solidity code that produced unexpected behaviour.
