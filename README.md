@@ -8,11 +8,7 @@ This tool is used to track the values and addresses of slots (storage variables 
 
 ## Building
 
-Python and Flask are required to run the web view.
-
-```bash
-pip3 install Flask
-```
+Python is required to run the TracEVM.
 
 Additionally, [Geth prerequisites](https://geth.ethereum.org/docs/getting-started/installing-geth#build-from-source) are required to compile Geth.
 
