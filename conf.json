@@ -16,5 +16,6 @@
         "logs": true,
         "sol_view": true
     },
-    "output": "out.txt"
+    "output": "out.txt",
+    "past_unknown": false
 }

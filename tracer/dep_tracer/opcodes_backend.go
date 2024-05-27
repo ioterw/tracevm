@@ -27,6 +27,9 @@ const (
     OPCallResult  uint8 = 0x16
     OPBlobBaseFee uint8 = 0x17
 
+    OPUnknownCode uint8 = 0x30 // special case of slot not known in the past
+    OPUnknownSlot uint8 = 0x31 // special case of code not known in the past
+
     // Dynamic
     OPSlice           uint8 = 0xA0
     // take some uint8s from bigger value (value + offset + size)

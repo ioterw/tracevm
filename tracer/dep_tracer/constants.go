@@ -11,4 +11,5 @@ var (
 
 type StateDB interface {
     GetNonce(addr common.Address) uint64
+    GetCode(addr common.Address) []byte
 }

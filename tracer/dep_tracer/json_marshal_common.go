@@ -28,13 +28,14 @@ func (b *BigInt) UnmarshalJSON(p []byte) error {
 }
 
 type DataStart struct {
-    IsCreate  bool       `json:"is_create"`
+    IsCreate  bool           `json:"is_create"`
     Address   common.Address `json:"address"`
-    Input     []byte   `json:"input"`
-    Block     *big.Int     `json:"block"`
-    Timestamp uint64     `json:"timestamp"`
+    Input     []byte         `json:"input"`
+    Block     *big.Int       `json:"block"`
+    Timestamp uint64         `json:"timestamp"`
     Origin    common.Address `json:"origin"`
-    TxHash    common.Hash `json:"tx_hash"`
+    TxHash    common.Hash    `json:"tx_hash"`
+    Code      []byte         `json:"code"`
 }
 
 type DataError struct {
@@ -134,11 +135,13 @@ type DataCodeSize struct {
 type DataExtCodeSize struct {
     Address  common.Address `json:"address"`
     CodeSize uint256.Int    `json:"code_size"`
+    Code     []byte         `json:"code"`
 }
 
 type DataExtCodeHash struct {
     Address  common.Address `json:"address"`
-    Hash     common.Hash `json:"hash"`
+    Hash     common.Hash    `json:"hash"`
+    Code     []byte         `json:"code"`
 }
 
 type DataCalldataSize struct {
@@ -157,9 +160,10 @@ type DataCodeCopy struct {
 
 type DataExtCodeCopy struct {
     Address      common.Address `json:"address"`
-    MemoryOffset uint64     `json:"memory_offset"`
-    CodeOffset   uint64     `json:"code_offset"`
-    Length       uint64     `json:"length"`
+    MemoryOffset uint64         `json:"memory_offset"`
+    CodeOffset   uint64         `json:"code_offset"`
+    Length       uint64         `json:"length"`
+    Code         []byte         `json:"code"`
 }
 
 type DataCalldataCopy struct {
@@ -244,11 +248,12 @@ type DataCreate2End struct {
 }
 
 type DataCallStart struct {
-    N           int        `json:"n"`
+    N           int            `json:"n"`
     Address     common.Address `json:"address"`
     CodeAddress common.Address `json:"code_address"`
-    InOffset    uint64     `json:"in_offset"`
-    InSize      uint64     `json:"in_size"`
+    InOffset    uint64         `json:"in_offset"`
+    InSize      uint64         `json:"in_size"`
+    Code        []byte         `json:"code"`
 }
 
 type DataCallEnd struct {

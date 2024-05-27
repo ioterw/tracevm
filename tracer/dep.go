@@ -41,6 +41,8 @@ type Dep struct {
     time                  uint64
     isRandom              bool
     isSelfdestruct6780    bool
+
+    fuckn int
 }
 
 func newDep(cfg json.RawMessage) (*tracing.Hooks, error) {
@@ -49,8 +51,9 @@ func newDep(cfg json.RawMessage) (*tracing.Hooks, error) {
             Engine string `json:"engine"`
             Root   string `json:"root"`
         } `json:"kv"`
-        Logger *dep_tracer.LoggerDefinition `json:"logger,omitempty"`
-        Output string `json:"output"`
+        Logger      *dep_tracer.LoggerDefinition `json:"logger,omitempty"`
+        Output      string                       `json:"output"`
+        PastUnknown bool                         `json:"past_unknown"`
     }
 
     var config depTracerConfig
@@ -76,6 +79,7 @@ func newDep(cfg json.RawMessage) (*tracing.Hooks, error) {
         config.KV.Engine,
         config.KV.Root,
         config.Logger,
+        config.PastUnknown,
         writer,
     )
 
@@ -96,6 +100,8 @@ func newDep(cfg json.RawMessage) (*tracing.Hooks, error) {
         returnInput:           nil,
         blockNumber:           nil,
         time:                  0,
+
+        fuckn: 3,
     }
     return &tracing.Hooks{
         OnBlockStart: t.OnBlockStart,
@@ -130,6 +136,10 @@ func (t *Dep) OnTxStart(vm *tracing.VMContext, tx *types.Transaction, from commo
     if !t.writingBlock {
         return
     }
+    if t.fuckn > 0 {
+        t.fuckn -= 1
+        return
+    }
 
     create := tx.To() == nil
     var addr common.Address
@@ -147,6 +157,11 @@ func (t *Dep) OnTxStart(vm *tracing.VMContext, tx *types.Transaction, from commo
         Timestamp: vm.Time,
         Origin: from,
         TxHash: tx.Hash(),
+    }
+    if create {
+        startData.Code = nil
+    } else {
+        startData.Code = vm.StateDB.GetCode(addr)
     }
     t.state = dep_tracer.TransactionStart(t.db, startData)
     t.isSelfdestruct6780 = vm.ChainConfig.IsCancun(t.blockNumber, t.time)

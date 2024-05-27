@@ -6,7 +6,7 @@ import (
     "github.com/ethereum/go-ethereum/common"
 )
 
-func SetupDB(kvEngine, kvRoot string, toLog *LoggerDefinition, writer OutputWriter) *SimpleDB {
+func SetupDB(kvEngine, kvRoot string, toLog *LoggerDefinition, pastUnknown bool, writer OutputWriter) *SimpleDB {
     protected := []ProtectedDefinition{}
     protected = append(protected, CryptoProtectedDefinition())
 
@@ -28,6 +28,7 @@ func SetupDB(kvEngine, kvRoot string, toLog *LoggerDefinition, writer OutputWrit
     return SimpleDBNew(
         protected, *toLog,
         kvEngine, kvRoot,
+        pastUnknown,
         writer,
     )
 }
@@ -37,7 +38,7 @@ func TransactionStart(db *SimpleDB, data DataStart) *TransactionDB {
     if data.IsCreate {
         state = TransactionDBCreate(db, data.Address, common.Address{}, data.Input)
     } else {
-        state = TransactionDBCall(db, data.Address, data.Address, data.Input)
+        state = TransactionDBCall(db, data.Address, data.Address, data.Input, data.Code)
     }
 
     db.logger.EnterContext(data.Block, data.Timestamp, data.Origin, data.TxHash)
@@ -128,8 +129,8 @@ func (data DataSLoad) Handle(db *SimpleDB, state *TransactionDB) {
     slot := state.Stack().Pop()
     slotFormula := state.FormulaDepWithShorts(slot[:])
 
-    value := state.GetSlot(&data.Slot)
     valueBin := data.Value.Bytes32()
+    value := state.GetSlot(&data.Slot, valueBin)
     valueFormula := state.FormulaDepWithShorts(value[:])
 
     val := state.FormulaNewWithShorts(OPSLoad, valueBin[:], []common.Hash{valueFormula.hash, slotFormula.hash})
@@ -235,7 +236,7 @@ func (data DataExtCodeSize) Handle(db *SimpleDB, state *TransactionDB) {
     addrFormula := state.FormulaDepWithShorts(addr[32-20:])
 
     addrBin := data.Address
-    codeFormula := state.FormulaDepWithShorts(state.GetCode(addrBin))
+    codeFormula := state.FormulaDepWithShorts(state.GetCode(addrBin, data.Code))
 
     codeSizeBin := data.CodeSize.Bytes32()
 
@@ -248,7 +249,7 @@ func (data DataExtCodeHash) Handle(db *SimpleDB, state *TransactionDB) {
     addrFormula := state.FormulaDepWithShorts(addr[32-20:])
 
     addrBin := data.Address
-    codeFormula := state.FormulaDepWithShorts(state.GetCode(addrBin))
+    codeFormula := state.FormulaDepWithShorts(state.GetCode(addrBin, data.Code))
 
     hashBin := data.Hash
 
@@ -291,7 +292,7 @@ func (data DataExtCodeCopy) Handle(db *SimpleDB, state *TransactionDB) {
     state.Stack().Pop() // codeOffset
     state.Stack().Pop() // length
 
-    val := OverflowSliceDEPBytes(state.GetCode(data.Address), data.CodeOffset, data.Length)
+    val := OverflowSliceDEPBytes(state.GetCode(data.Address, data.Code), data.CodeOffset, data.Length)
     state.Memory().SetN(data.MemoryOffset, val)
 }
 
@@ -463,7 +464,7 @@ func (data DataCallStart) Handle(db *SimpleDB, state *TransactionDB) {
 
     calldata := state.Memory().Load(data.InOffset, data.InSize)
 
-    state.Call(data.Address, data.CodeAddress, calldata)
+    state.Call(data.Address, data.CodeAddress, calldata, data.Code)
     db.logger.SetContractAddress(state.Address(), state.AddressVersion(), state.CodeAddress(), state.CodeHash(), state.InitcodeHash())
 }
 

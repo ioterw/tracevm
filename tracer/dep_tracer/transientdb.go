@@ -80,13 +80,13 @@ type TransactionDB struct {
     returndata []DEPByte
 }
 
-func TransactionDBCall(simpleDB *SimpleDB, addr, codeAddr common.Address, calldataBin []byte) *TransactionDB {
+func TransactionDBCall(simpleDB *SimpleDB, addr, codeAddr common.Address, calldataBin []byte, code []byte) *TransactionDB {
     t := new(TransactionDB)
     t.simpleDB = simpleDB
     t.states = []*TransactionState{transactionStateNew(simpleDB, false, addr, codeAddr)}
 
     calldata := FormulaDEPBytes(simpleDB.ConstantNewWithShorts(OPCallData, calldataBin))
-    t.Call(addr, addr, calldata)
+    t.Call(addr, addr, calldata, code)
 
     return t
 }
@@ -117,11 +117,11 @@ func (t *TransactionDB) Commit() {
     t.simpleDB.ResetFormulas()
 }
 
-func (t *TransactionDB) Call(addr, codeAddr common.Address, calldata []DEPByte) {
+func (t *TransactionDB) Call(addr, codeAddr common.Address, calldata []DEPByte, code []byte) {
     t.dupState()
     t.returndata = make([]DEPByte, 0)
     addrVersion := t.GetAddressVersion(addr)
-    t.curState().stacked.Push(false, addr, addrVersion, codeAddr, calldata, t.GetCode(codeAddr), t.GetCodeHash(codeAddr), t.GetInitcodeHash(codeAddr))
+    t.curState().stacked.Push(false, addr, addrVersion, codeAddr, calldata, t.GetCode(codeAddr, code), t.GetCodeHash(codeAddr, code), t.GetInitcodeHash(codeAddr, code))
 }
 
 func (t *TransactionDB) Create(addr, codeAddr common.Address, initcode []DEPByte, initcodeBin []byte) {
@@ -179,8 +179,8 @@ func (t *TransactionDB) GetAddressVersion(addr common.Address) uint64 {
     return t.curState().overlayDB.GetAddressVersion(addr)
 }
 
-func (t *TransactionDB) GetSlot(slot *uint256.Int) []DEPByte {
-    return t.curState().overlayDB.GetSlot(t.Address(), slot).data
+func (t *TransactionDB) GetSlot(slot *uint256.Int, value common.Hash) []DEPByte {
+    return t.curState().overlayDB.GetSlot(t.Address(), slot, value).data
 }
 
 func (t *TransactionDB) SetSlot(slot *uint256.Int, val []DEPByte) {
@@ -195,16 +195,16 @@ func (t *TransactionDB) SetTransient(slot *uint256.Int, val []DEPByte) {
     t.curState().overlayDB.SetTransient(t.Address(), slot, val)
 }
 
-func (t *TransactionDB) GetCode(addr common.Address) []DEPByte {
-    return t.curState().overlayDB.GetCode(addr).data
+func (t *TransactionDB) GetCode(addr common.Address, code []byte) []DEPByte {
+    return t.curState().overlayDB.GetCode(addr, code).data
 }
 
-func (t *TransactionDB) GetCodeHash(addr common.Address) common.Hash {
-    return t.curState().overlayDB.GetCode(addr).codeHash
+func (t *TransactionDB) GetCodeHash(addr common.Address, code []byte) common.Hash {
+    return t.curState().overlayDB.GetCode(addr, code).codeHash
 }
 
-func (t *TransactionDB) GetInitcodeHash(addr common.Address) common.Hash {
-    return t.curState().overlayDB.GetCode(addr).initcodeHash
+func (t *TransactionDB) GetInitcodeHash(addr common.Address, code []byte) common.Hash {
+    return t.curState().overlayDB.GetCode(addr, code).initcodeHash
 }
 
 func (t *TransactionDB) SetCode(val []DEPByte, valBytes []byte, initcodeHash common.Hash) {

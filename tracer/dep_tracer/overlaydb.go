@@ -98,13 +98,13 @@ func (o *OverlayDB) GetAddressVersion(addr common.Address) uint64 {
     return val
 }
 
-func (o *OverlayDB) GetSlot(addr common.Address, slot *uint256.Int) OverlaySlot {
+func (o *OverlayDB) GetSlot(addr common.Address, slot *uint256.Int, value common.Hash) OverlaySlot {
     key := OverlayDBSlotKey{addr, *slot}
     val, ok := o.slots[key]
     if ok {
         return val
     }
-    val = OverlaySlot{o.simpleDB.GetSlot(addr, slot), common.Address{}}
+    val = OverlaySlot{o.simpleDB.GetSlot(addr, slot, value), common.Address{}}
     o.slots[key] = val
     return val
 }
@@ -131,12 +131,12 @@ func (o *OverlayDB) SetTransient(addr common.Address, slot *uint256.Int, val []D
     o.transient[key] = val
 }
 
-func (o *OverlayDB) GetCode(addr common.Address) OverlayCode {
+func (o *OverlayDB) GetCode(addr common.Address, code []byte) OverlayCode {
     val, ok := o.codes[addr]
     if ok {
         return val
     }
-    codeHash, initcodeHash, res := o.simpleDB.GetCode(addr)
+    codeHash, initcodeHash, res := o.simpleDB.GetCode(addr, code)
     val = OverlayCode{res, common.Address{}, codeHash, initcodeHash}
     o.codes[addr] = val
     return val

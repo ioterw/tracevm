@@ -28,6 +28,7 @@ type SimpleDB struct {
     shorts             []*Shorterner
     logger             Logger
     writer             OutputWriter
+    pastUnknown        bool
 }
 
 func CodeHash(code []byte) common.Hash {
@@ -60,6 +61,7 @@ func SimpleDBNew(
     protectedDifinitions []ProtectedDefinition,
     toLog LoggerDefinition,
     kvEngine, kvRoot string,
+    pastUnknown bool,
     writer OutputWriter,
 ) *SimpleDB {
     s := new(SimpleDB)
@@ -88,6 +90,8 @@ func SimpleDBNew(
 
     s.logger = NewLogger(s, toLog, writer)
     s.writer = writer
+
+    s.pastUnknown = pastUnknown
 
     return s
 }
@@ -472,7 +476,7 @@ func (s *SimpleDB) IncreaseAddressVersion(addr common.Address) uint64 {
     return version
 }
 
-func (s *SimpleDB) GetSlot(addr common.Address, slot *uint256.Int) []DEPByte {
+func (s *SimpleDB) GetSlot(addr common.Address, slot *uint256.Int, value common.Hash) []DEPByte {
     version := s.GetAddressVersion(addr)
     res := make([]DEPByte, 0)
     for i := uint8(0); i < 32; i++ {
@@ -483,7 +487,11 @@ func (s *SimpleDB) GetSlot(addr common.Address, slot *uint256.Int) []DEPByte {
         }
     }
     if len(res) == 0 {
-        return InitDEPBytes(32)
+        if s.pastUnknown {
+            return FormulaDEPBytes(s.ConstantNewWithShorts(OPUnknownSlot, value[:]))
+        } else {
+            return InitDEPBytes(32)
+        }
     }
     if len(res) == 32 {
         return res
@@ -502,7 +510,7 @@ func (s *SimpleDB) SetSlot(addr common.Address, slot *uint256.Int, val []DEPByte
     }
 }
 
-func (s *SimpleDB) GetCode(addr common.Address) (common.Hash, common.Hash, []DEPByte) {
+func (s *SimpleDB) GetCode(addr common.Address, code []byte) (common.Hash, common.Hash, []DEPByte) {
     version := s.GetAddressVersion(addr)
 
     location := codeHashLocation(addr, version)
@@ -514,14 +522,19 @@ func (s *SimpleDB) GetCode(addr common.Address) (common.Hash, common.Hash, []DEP
         copy(initcodeHash[:], codeHashData[32:])
     }
 
-    res := make([]DEPByte, 0)
-    for i := uint64(0);; i++ {
-        location := codeLocation(addr, version, i)
-        val := s.codesDB.Get(location, true)
-        if val == nil {
-            break
+    var res []DEPByte
+    if s.pastUnknown {
+        res = FormulaDEPBytes(s.ConstantNewWithShorts(OPUnknownCode, code))
+    } else {
+        res = make([]DEPByte, 0)
+        for i := 0; i < len(code); i++ {
+            location := codeLocation(addr, version, uint64(i))
+            val := s.codesDB.Get(location, true)
+            if val == nil {
+                panic("was not able to read the whole code of contract")
+            }
+            res = append(res, DEPByteFromBin(val))
         }
-        res = append(res, DEPByteFromBin(val))
     }
     return codeHash, initcodeHash, res
 }

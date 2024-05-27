@@ -25,6 +25,9 @@ var OpcodeToString = map[uint8]string{
     OPCreate2Addr: "CREATE2ADDR",
     OPCallResult:  "CALLRESULT",
     OPBlobBaseFee: "BLOBBASEFEE",
+    
+    OPUnknownCode: "UNKNOWNCODE",
+    OPUnknownSlot: "UNKNOWNSLOT",
 
 	OPSlice:           "SLICE",
 	OPConcat:          "CONCAT",

@@ -434,6 +434,7 @@ func (oh *ExtCodeSizeHandler) Register(handlers map[byte]OPHandler) {
 func (oh *ExtCodeSizeHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, scope tracing.OpContext) int {
     oh.data = DataExtCodeSize {
         Address: stack[stackSize-1].Bytes20(),
+        Code: stateDB.GetCode(stack[stackSize-1].Bytes20()),
     }
 
     return DIRECTION_NONE
@@ -1065,6 +1066,7 @@ func (oh *ExtCodeCopyHandler) Before(db *SimpleDB, state *TransactionDB, stack [
         MemoryOffset: stack[stackSize-2].Uint64(),
         CodeOffset: uint64CodeOffset,
         Length: stack[stackSize-4].Uint64(),
+        Code: stateDB.GetCode(stack[stackSize-1].Bytes20()),
     }
 
     return DIRECTION_NONE
@@ -1167,6 +1169,7 @@ func (oh *ExtCodeHashHandler) Register(handlers map[byte]OPHandler) {
 func (oh *ExtCodeHashHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, scope tracing.OpContext) int {
     oh.data = DataExtCodeHash {
         Address: stack[stackSize-1].Bytes20(),
+        Code: stateDB.GetCode(stack[stackSize-1].Bytes20()),
     }
 
     return DIRECTION_NONE
@@ -1371,6 +1374,7 @@ func (oh *CallHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint25
         CodeAddress: stack[stackSize-2].Bytes20(),
         InOffset: stack[stackSize-4].Uint64(),
         InSize: stack[stackSize-5].Uint64(),
+        Code: stateDB.GetCode(stack[stackSize-2].Bytes20()),
     }.Handle(db, state)
 
     oh.DataEnd = DataCallEnd {
@@ -1400,6 +1404,7 @@ func (oh *CallCodeHandler) Before(db *SimpleDB, state *TransactionDB, stack []ui
         CodeAddress: stack[stackSize-2].Bytes20(),
         InOffset: stack[stackSize-4].Uint64(),
         InSize: stack[stackSize-5].Uint64(),
+        Code: stateDB.GetCode(stack[stackSize-2].Bytes20()),
     }.Handle(db, state)
 
     oh.DataEnd = DataCallEnd {
@@ -1429,6 +1434,7 @@ func (oh *DelegateCallHandler) Before(db *SimpleDB, state *TransactionDB, stack 
         CodeAddress: stack[stackSize-2].Bytes20(),
         InOffset: stack[stackSize-3].Uint64(),
         InSize: stack[stackSize-4].Uint64(),
+        Code: stateDB.GetCode(stack[stackSize-2].Bytes20()),
     }.Handle(db, state)
 
     oh.DataEnd = DataCallEnd {
@@ -1458,6 +1464,7 @@ func (oh *StaticCallHandler) Before(db *SimpleDB, state *TransactionDB, stack []
         CodeAddress: stack[stackSize-2].Bytes20(),
         InOffset: stack[stackSize-3].Uint64(),
         InSize: stack[stackSize-4].Uint64(),
+        Code: stateDB.GetCode(stack[stackSize-2].Bytes20()),
     }.Handle(db, state)
 
     oh.DataEnd = DataCallEnd {
