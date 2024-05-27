@@ -19,6 +19,8 @@ func NewDB(engine, root, name string) DB {
         return NewLevelDB(root, name)
     case "riak":
         return NewRiakDB(root, name)
+    case "memory":
+        return NewMemoryDB()
     default:
         panic("unknown engine")
     }
@@ -177,3 +179,37 @@ func (db RiakDB) Delete(key []byte) {
 func (db RiakDB) DumpAllDebug() map[string][]byte {
     panic("DumpAllDebug() not implemented")
 }
+
+
+type MemoryDB struct {
+    data map[string][]byte
+}
+
+func NewMemoryDB() MemoryDB {
+    db := MemoryDB{}
+    db.data = map[string][]byte{}
+    return db
+}
+
+func (db MemoryDB) Get(key []byte, optional bool) []byte {
+    if val, ok := db.data[string(key)]; ok {
+        return val
+    }
+    if optional {
+        return nil
+    }
+    panic("key not found")
+}
+
+func (db MemoryDB) Set(key, value []byte) {
+    db.data[string(key)] = value
+}
+
+func (db MemoryDB) Delete(key []byte) {
+    delete(db.data, string(key))
+}
+
+func (db MemoryDB) DumpAllDebug() map[string][]byte {
+    return db.data
+}
+

@@ -1,7 +1,7 @@
 {
     "kv": {
-        "engine": "leveldb",
-        "root": "db"
+        "engine": "memory",
+        "root": ""
     },
     "logger": {
         "opcodes_short": {},

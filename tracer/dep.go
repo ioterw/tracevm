@@ -63,8 +63,10 @@ func newDep(cfg json.RawMessage) (*tracing.Hooks, error) {
     if config.KV.Engine == "" {
         panic("kv engine is not set")
     }
-    if config.KV.Root == "" {
-        panic("kv root (path) is not set")
+    if config.KV.Engine != "memory" {
+        if config.KV.Root == "" {
+            panic("kv root (path) is not set")
+        }
     }
     var writer dep_tracer.OutputWriter
     if config.Output == "" {
