@@ -41,8 +41,6 @@ type Dep struct {
     time                  uint64
     isRandom              bool
     isSelfdestruct6780    bool
-
-    fuckn int
 }
 
 func newDep(cfg json.RawMessage) (*tracing.Hooks, error) {
@@ -100,8 +98,6 @@ func newDep(cfg json.RawMessage) (*tracing.Hooks, error) {
         returnInput:           nil,
         blockNumber:           nil,
         time:                  0,
-
-        fuckn: 3,
     }
     return &tracing.Hooks{
         OnBlockStart: t.OnBlockStart,
@@ -134,10 +130,6 @@ func (t *Dep) OnBlockEnd(err error) {
 
 func (t *Dep) OnTxStart(vm *tracing.VMContext, tx *types.Transaction, from common.Address) {
     if !t.writingBlock {
-        return
-    }
-    if t.fuckn > 0 {
-        t.fuckn -= 1
         return
     }
 
