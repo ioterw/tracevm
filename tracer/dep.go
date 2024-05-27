@@ -10,7 +10,6 @@ import (
     "github.com/ethereum/go-ethereum/common"
     "github.com/ethereum/go-ethereum/core/tracing"
     "github.com/ethereum/go-ethereum/core/types"
-    "github.com/ethereum/go-ethereum/params"
     "github.com/ethereum/go-ethereum/core/vm"
     "github.com/ethereum/go-ethereum/eth/tracers"
     "github.com/ethereum/go-ethereum/crypto"
@@ -23,21 +22,25 @@ func init() {
 }
 
 type Dep struct {
-    writingBlock bool
+    // flow variables
+    writingBlock          bool
+    returnHandled         bool
+    selfdestructProtector bool
+    // dep_tracer variables
     db                    *dep_tracer.SimpleDB
     state                 *dep_tracer.TransactionDB
     prevOPHandler         dep_tracer.OPHandler
     opHandlers            map[byte]dep_tracer.OPHandler
     pcHandlers            map[common.Address]dep_tracer.PrecompileHandler
     retHandlers           []dep_tracer.OPHandler
-    chainConfig           *params.ChainConfig
-    stateDB               tracing.StateDB
-    returnHandled         bool
+    // input variables
+    stateDB               dep_tracer.StateDB
     returnAddress         common.Address
     returnInput           []byte
     blockNumber           *big.Int
     time                  uint64
-    selfdestructProtector bool
+    isRandom              bool
+    isSelfdestruct6780    bool
 }
 
 func newDep(cfg json.RawMessage) (*tracing.Hooks, error) {
@@ -78,20 +81,21 @@ func newDep(cfg json.RawMessage) (*tracing.Hooks, error) {
 
     t := &Dep{
         writingBlock:          false,
+        returnHandled:         false,
+        selfdestructProtector: false,
+
         db:                    db,
         state:                 nil,
         prevOPHandler:         nil,
         opHandlers:            dep_tracer.NewOPHandlers(),
         pcHandlers:            dep_tracer.NewPrecompileHandlers(),
         retHandlers:           []dep_tracer.OPHandler{},
-        chainConfig:           nil,
+
         stateDB:               nil,
-        returnHandled:         false,
         returnAddress:         common.Address{},
         returnInput:           nil,
         blockNumber:           nil,
         time:                  0,
-        selfdestructProtector: false,
     }
     return &tracing.Hooks{
         OnBlockStart: t.OnBlockStart,
@@ -109,8 +113,8 @@ func (t *Dep) OnBlockStart(ev tracing.BlockEvent) {
     if t.writingBlock {
         panic("OnBlockStart called during writingBlock state")
     }
-    // fmt.Println("OnBlockStart")
     t.writingBlock = true
+
     t.blockNumber = ev.Block.Number()
     t.time = ev.Block.Time()
 }
@@ -119,7 +123,6 @@ func (t *Dep) OnBlockEnd(err error) {
     if !t.writingBlock {
         return
     }
-    // fmt.Println("OnBlockEnd")
     t.writingBlock = false
 }
 
@@ -127,7 +130,6 @@ func (t *Dep) OnTxStart(vm *tracing.VMContext, tx *types.Transaction, from commo
     if !t.writingBlock {
         return
     }
-    // fmt.Println("OnTxStart")
 
     create := tx.To() == nil
     var addr common.Address
@@ -147,7 +149,8 @@ func (t *Dep) OnTxStart(vm *tracing.VMContext, tx *types.Transaction, from commo
         TxHash: tx.Hash(),
     }
     t.state = dep_tracer.TransactionStart(t.db, startData)
-    t.chainConfig = vm.ChainConfig
+    t.isSelfdestruct6780 = vm.ChainConfig.IsCancun(t.blockNumber, t.time)
+    t.isRandom = vm.ChainConfig.IsLondon(t.blockNumber)
     t.stateDB = vm.StateDB
 }
 
@@ -155,7 +158,6 @@ func (t *Dep) OnTxEnd(receipt *types.Receipt, err error) {
     if t.state == nil {
         return
     }
-    // fmt.Println("OnTxEnd")
 
     dep_tracer.TransactionFinish(t.state)
     t.state = nil
@@ -166,19 +168,13 @@ func (t *Dep) OnOpcode(pc uint64, op byte, gas, cost uint64, scope tracing.OpCon
         return
     }
 
-    // normal execution
-
     stack := scope.StackData()
     stackSize := len(stack)
 
     if t.prevOPHandler != nil {
-        t.prevOPHandler.After(t.db, t.state, stack, stackSize, t.stateDB, t.chainConfig, t.blockNumber, t.time, pc, op, scope)
+        t.prevOPHandler.After(t.db, t.state, stack, stackSize, t.stateDB, t.isSelfdestruct6780, t.isRandom, pc, op, scope)
         t.prevOPHandler = nil
     }
-
-    // fmt.Println("OnOpcode", vm.OpCode(op).String(), err, gas, cost)
-
-    // t.state.DebugPrintState()
 
     if err != nil {
         dep_tracer.DataError{
@@ -198,7 +194,7 @@ func (t *Dep) OnOpcode(pc uint64, op byte, gas, cost uint64, scope tracing.OpCon
     }
 
     if opHandler, ok := t.opHandlers[op]; ok {
-        direction := opHandler.Before(t.db, t.state, stack, stackSize, t.stateDB, t.chainConfig, t.blockNumber, t.time, pc, op, scope)
+        direction := opHandler.Before(t.db, t.state, stack, stackSize, t.stateDB, t.isSelfdestruct6780, t.isRandom, pc, op, scope)
         switch direction {
         case dep_tracer.DIRECTION_NONE:
             t.prevOPHandler = opHandler
@@ -236,7 +232,7 @@ func (t *Dep) OnEnter(depth int, typ byte, from common.Address, to common.Addres
     if t.selfdestructProtector {
         return
     }
-    // fmt.Println("OnEnter")
+
     t.returnAddress = to
     t.returnInput = input
 }
@@ -245,7 +241,6 @@ func (t *Dep) OnFault(pc uint64, op byte, gas, cost uint64, _ tracing.OpContext,
     if t.state == nil {
         return
     }
-    // fmt.Println("OnFault", vm.OpCode(op).String(), err)
 
     o := vm.OpCode(op)
     if o == vm.REVERT {
@@ -266,7 +261,6 @@ func (t *Dep) OnExit(depth int, output []byte, gasUsed uint64, err error, revert
         t.selfdestructProtector = false
         return
     }
-    // fmt.Println("OnExit", err)
 
     if !t.returnHandled {
         if len(output) > 0 {
