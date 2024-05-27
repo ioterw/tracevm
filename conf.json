@@ -16,6 +16,6 @@
         "logs": true,
         "sol_view": true
     },
-    "output": "out.txt",
+    "output": "http://127.0.0.1:4334",
     "past_unknown": false
 }

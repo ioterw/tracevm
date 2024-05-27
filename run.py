@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-import os, subprocess, json, sys, shutil, webbrowser, tempfile
+import os, subprocess, json, sys
 import webview.app
 
 def popen(*args, **kwargs):
@@ -13,11 +13,6 @@ def handle_config(config_path):
     json_folder = os.path.abspath(config_path).rsplit('/', 1)[0]
     with open(config_path, 'r') as f:
         config = json.load(f)
-    if config['kv']['engine'] == 'leveldb':
-        if not config['kv']['root'].startswith('/'):
-            config['kv']['root'] = json_folder + '/' + config['kv']['root']
-    if 'output' in config and config['output'] != '' and not config['output'].startswith('/'):
-        config['output'] = json_folder + '/' + config['output']
     return config
 
 def run_server(config):
@@ -37,12 +32,7 @@ def run_geth(config):
 
 def main(config_path):
     config = handle_config(config_path)
-    try:
-        p = run_server(config)
-        webbrowser.open('http://127.0.0.1:4334', new=0, autoraise=True)
-        run_geth(config)
-    finally:
-        p.kill()
+    run_geth(config)
 
 if __name__ == '__main__':
     main(sys.argv[1])

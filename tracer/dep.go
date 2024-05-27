@@ -5,6 +5,7 @@ import (
     "encoding/hex"
     "math/big"
     "reflect"
+    "strings"
     "fmt"
 
     "github.com/ethereum/go-ethereum/common"
@@ -71,6 +72,8 @@ func newDep(cfg json.RawMessage) (*tracing.Hooks, error) {
     var writer dep_tracer.OutputWriter
     if config.Output == "" {
         writer = dep_tracer.NewStdoutWriter()
+    } else if strings.HasPrefix(config.Output, "http://") {
+        writer = dep_tracer.NewHttpWriter(config.Output)
     } else {
         writer = dep_tracer.NewFileWriter(config.Output)
     }
