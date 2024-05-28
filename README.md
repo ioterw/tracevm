@@ -6,13 +6,21 @@ This tool is used to track the values and addresses of slots (storage variables 
 - Suitable for learning about Solidity internals
 - Written in Go and Python
 
-## Building
+## Prerequesits
 
-Python is required to run TracEVM.
+Project includes submodules, therefore it is needed to clone the project this way.
+
+```bash
+git clone --recurse-submodules https://github.com/ioterw/tracevm.git
+```
+
+Also, `make`, `go` and `python3` should be preinstalled.
 
 Additionally, [Geth prerequisites](https://geth.ethereum.org/docs/getting-started/installing-geth#build-from-source) are required to compile Geth.
 
-Finally, it is possible to build TracEVM.
+## Building
+
+It is possible to build TracEVM with such command.
 
 ```bash
 ./build.py
