@@ -38,6 +38,8 @@ type Dep struct {
     stateDB               dep_tracer.StateDB
     returnAddress         common.Address
     returnInput           []byte
+    blockNumber           *big.Int
+    time                  uint64
     isRandom              bool
     isSelfdestruct6780    bool
 }
@@ -99,6 +101,8 @@ func newDep(cfg json.RawMessage) (*tracing.Hooks, error) {
         stateDB:               nil,
         returnAddress:         common.Address{},
         returnInput:           nil,
+        blockNumber:           nil,
+        time:                  0,
     }
     return &tracing.Hooks{
         OnBlockStart: t.OnBlockStart,
@@ -118,8 +122,8 @@ func (t *Dep) OnBlockStart(ev tracing.BlockEvent) {
     }
     t.writingBlock = true
 
-    t.isSelfdestruct6780 = vm.ChainConfig.IsCancun(ev.Block.Number(), ev.Block.Time())
-    t.isRandom = vm.ChainConfig.IsLondon(ev.Block.Number())
+    t.blockNumber = ev.Block.Number()
+    t.time = ev.Block.Time()
 }
 
 func (t *Dep) OnBlockEnd(err error) {
@@ -157,6 +161,8 @@ func (t *Dep) OnTxStart(vm *tracing.VMContext, tx *types.Transaction, from commo
         startData.Code = vm.StateDB.GetCode(addr)
     }
     t.state = dep_tracer.TransactionStart(t.db, startData)
+    t.isSelfdestruct6780 = vm.ChainConfig.IsCancun(t.blockNumber, t.time)
+    t.isRandom = vm.ChainConfig.IsLondon(t.blockNumber)
     t.stateDB = vm.StateDB
 }
 
