@@ -9,9 +9,12 @@ def popen(*args, **kwargs):
     return res
 
 def handle_config(config_path):
-    json_folder = os.path.abspath(config_path).rsplit('/', 1)[0]
-    with open(config_path, 'r') as f:
-        config = json.load(f)
+    if config_path.lstrip().startswith('{'):
+        config = json.loads(config_path)
+    else:
+        json_folder = os.path.abspath(config_path).rsplit('/', 1)[0]
+        with open(config_path, 'r') as f:
+            config = json.load(f)
     return config
 
 def run_geth(config):
