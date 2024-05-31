@@ -8,7 +8,7 @@ This tool is used to track the values and addresses of slots (storage variables 
 
 ## Docker
 
-The easiest way to start using the tool is to use docker
+The easiest way to start using the tool is to use [Docker](https://hub.docker.com/r/ioterw/tracevm)
 
 ```bash
 docker pull ioterw/tracevm
