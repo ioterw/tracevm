@@ -6,6 +6,22 @@ This tool is used to track the values and addresses of slots (storage variables 
 - Suitable for learning about Solidity internals
 - Written in Go and Python
 
+## Docker
+
+The easiest way to start using the tool is to use docker
+
+```bash
+docker pull ioterw/tracevm
+```
+
+It is needed to copy the sample config from [here](https://github.com/ioterw/tracevm/blob/main/conf.json), and save it as `conf.json`
+
+Run TracEVM
+
+```bash
+cat conf.json | docker run --rm -i -p 4334:4334 -p 8545:8545 ioterw/tracevm
+```
+
 ## Prerequesits
 
 Project includes submodules, therefore it is needed to clone the project this way.
