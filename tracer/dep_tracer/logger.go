@@ -12,35 +12,35 @@ import (
 )
 
 type LoggerDefinition struct {
-    OpcodesShort      []string       `json:"opcodes_short"`
-    OpcodesFull       []string       `json:"opcodes"`
-    opcodesShort      map[uint64]bool
-    opcodesFull       map[uint64]bool
+    OpcodesShort    []string       `json:"opcodes_short"`
+    OpcodesFull     []string       `json:"opcodes"`
+    opcodesShort    map[uint64]bool
+    opcodesFull     map[uint64]bool
 
-    FinalSlotsShort   bool           `json:"final_slots_short"`
-    FinalSlotsFull    bool           `json:"final_slots"`
-    CodesShort        bool           `json:"codes_short"`
-    CodesFull         bool           `json:"codes"`
-    ReturnDataShort   bool           `json:"return_data_short"`
-    ReturnDataFull    bool           `json:"return_data"`
-    LogsShort         bool           `json:"logs_short"`
-    LogsFull          bool           `json:"logs"`
-    SolViewFinalSlots bool           `json:"sol_view"`
+    FinalSlotsShort bool           `json:"final_slots_short"`
+    FinalSlotsFull  bool           `json:"final_slots"`
+    CodesShort      bool           `json:"codes_short"`
+    CodesFull       bool           `json:"codes"`
+    ReturnDataShort bool           `json:"return_data_short"`
+    ReturnDataFull  bool           `json:"return_data"`
+    LogsShort       bool           `json:"logs_short"`
+    LogsFull        bool           `json:"logs"`
+    SolView         bool           `json:"sol_view"`
 }
 
 func NewLoggerDefinition(ld *LoggerDefinition) *LoggerDefinition {
     if ld == nil {
-        ld.OpcodesShort      = []string{}
-        ld.OpcodesFull       = []string{}
-        ld.FinalSlotsShort   = true
-        ld.FinalSlotsFull    = true
-        ld.CodesShort        = false
-        ld.CodesFull         = false
-        ld.ReturnDataShort   = false
-        ld.ReturnDataFull    = true
-        ld.LogsShort         = false
-        ld.LogsFull          = true
-        ld.SolViewFinalSlots = true
+        ld.OpcodesShort    = []string{}
+        ld.OpcodesFull     = []string{}
+        ld.FinalSlotsShort = true
+        ld.FinalSlotsFull  = true
+        ld.CodesShort      = false
+        ld.CodesFull       = false
+        ld.ReturnDataShort = false
+        ld.ReturnDataFull  = true
+        ld.LogsShort       = false
+        ld.LogsFull        = true
+        ld.SolView         = true
     }
     ld.opcodesShort      = map[uint64]bool{}
     ld.opcodesFull       = map[uint64]bool{}
@@ -165,15 +165,29 @@ func (l *Logger) logFormulasWithShorts(eventType string, addr common.Address, ad
             }
             outputFormulas[short.protected.name] = shortFormulas
         }
+    } else if l.toLog.SolView && fullEnabled {
+        for _, short := range l.simpleDB.shorts {
+            if short.protected.name != "crypto" {
+                continue
+            }
+            shortFormulas := []Formula{}
+            for _, formula := range formulas {
+                shortHash := short.LoadChildHash(formula.hash).hash
+                shortFormula := l.simpleDB.GetFormula(shortHash)
+                shortFormulas = append(shortFormulas, shortFormula)
+            }
+            outputFormulas[short.protected.name] = shortFormulas
+            break
+        }
     }
     if len(outputFormulas) > 0 {
         l.logFormulas(eventType, addr, addrVersion, codeAddr, outputFormulas)
     }
 }
 
-func sstoreSolidity(s *SimpleDB, formula Formula) {
+func solidityView(s *SimpleDB, formula Formula) {
     if formula.opcode != OPSStore && formula.opcode != OPSLoad {
-        panic("Trying to solidify strage opcode")
+        return
     }
     solView := SolViewNew(s, s.GetFormula(formula.operands[1]))
     s.writer.Println("## SOLIDITY")
@@ -231,9 +245,9 @@ func (l *Logger) logFormulas(
 
     l.writer.Println("## INFO")
     l.writer.Println(string(encodedMessage))
-    if eventType == "final_slot" && l.toLog.SolViewFinalSlots {
+    if l.toLog.SolView && len(outputFormulas["crypto"]) > 0 {
         cryptoFormula := outputFormulas["crypto"][0]
-        sstoreSolidity(l.simpleDB, cryptoFormula)
+        solidityView(l.simpleDB, cryptoFormula)
     }
     for shortType, formulas := range outputFormulas {
         if shortType == "full" {
