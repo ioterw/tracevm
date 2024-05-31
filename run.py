@@ -9,12 +9,9 @@ def popen(*args, **kwargs):
     return res
 
 def handle_config(config_path):
-    if config_path.lstrip().startswith('{'):
-        config = json.loads(config_path)
-    else:
-        json_folder = os.path.abspath(config_path).rsplit('/', 1)[0]
-        with open(config_path, 'r') as f:
-            config = json.load(f)
+    json_folder = os.path.abspath(config_path).rsplit('/', 1)[0]
+    with open(config_path, 'r') as f:
+        config = json.load(f)
     return config
 
 def run_geth(config):
@@ -24,11 +21,20 @@ def run_geth(config):
         '--vmtrace', 'dep', '--vmtrace.jsonconfig', json.dumps(config),
         '--dev', '--nodiscover', '--maxpeers', '0', '--mine',
         '--http', '--http.corsdomain', '*', '--http.api', 'web3,eth,debug,personal,net',
+        '--http.addr', '0.0.0.0',
     ])
 
-def main(config_path):
-    config = handle_config(config_path)
+def main(config_path, stdin):
+    if stdin:
+        config = json.loads(config_path)
+    else:
+        config = handle_config(config_path)
     run_geth(config)
 
 if __name__ == '__main__':
-    main(sys.argv[1])
+    if len(sys.argv) < 2:
+        print('Reading config from stdin')
+        conf = sys.stdin.read()
+        main(conf, True)
+    else:
+        main(sys.argv[1], False)
