@@ -86,6 +86,10 @@ Also there is a full formula, which computes all needed data from initial initco
     "logger": {
         // _short postfix generally counts only cryptographic formulas (sha256, keccak etc.)
         // as significant, other formulas are folded 
+        "opcodes_short": [],
+        // outputs each occurence of TracEVM opcode
+        // (probably it is a good idea to try ["e0", "e1"], which are sload and sstore)
+        "opcodes": [],
         "final_slots_short": true,
         // outputs final slots which are set at the end of transaction
         "final_slots": true,
@@ -111,6 +115,8 @@ Also there is a full formula, which computes all needed data from initial initco
     "past_unknown": false
 }
 ```
+
+List of TracEVM opcodes can be found [here](https://github.com/ioterw/tracevm/blob/main/tracer/dep_tracer/opcodes_backend.go)
 
 ## Found a bug?
 
