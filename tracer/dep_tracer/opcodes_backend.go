@@ -31,9 +31,7 @@ const (
     OPUnknownSlot uint8 = 0x31 // special case of code not known in the past
 
     // Dynamic
-    OPSlice           uint8 = 0xA0
-    // take some uint8s from bigger value (value + offset + size)
-    // do not want to split every 32 byte result to separate bytes without any reason
+    OPSlice           uint8 = 0xA0 // slice some value
     OPConcat          uint8 = 0xA1 // opposite of slice, for example can be used when passing multiple
     OPSize            uint8 = 0xA2 // size of data
     OPCodeSize        uint8 = 0xA3
