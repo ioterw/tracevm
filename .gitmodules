@@ -1,3 +1,4 @@
 [submodule "go-ethereum"]
 	url = https://github.com/ethereum/go-ethereum.git
 	path = go-ethereum
+	shallow = true
