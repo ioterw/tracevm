@@ -27,7 +27,9 @@ cat conf.json | docker run --rm -i -p 4334:4334 -p 8545:8545 ioterw/tracevm
 Project includes submodules, therefore it is needed to clone the project this way.
 
 ```bash
-git clone --recurse-submodules https://github.com/ioterw/tracevm.git
+git clone https://github.com/ioterw/tracevm.git
+cd tracevm
+git cubmodule update --init
 ```
 
 Also, `make`, `go` and `python3` should be preinstalled.
