@@ -4,7 +4,7 @@
         "root": ""
     },
     "logger": {
-        "opcodes_short": [],
+        "opcodes_short": ["e0", "e1"],
         "opcodes": [],
         "final_slots_short": true,
         "final_slots": true,
