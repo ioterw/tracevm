@@ -1,0 +1,21 @@
+{
+    "kv": {
+        "engine": "memory",
+        "root": ""
+    },
+    "logger": {
+        "opcodes_short": [],
+        "opcodes": ["bc", "bd", "c0", "c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8", "c9", "d1"],
+        "final_slots_short": false,
+        "final_slots": false,
+        "codes_short": false,
+        "codes": false,
+        "return_data_short": false,
+        "return_data": false,
+        "logs_short": false,
+        "logs": false,
+        "sol_view": false
+    },
+    "output": "http://0.0.0.0:4334",
+    "past_unknown": false
+}

@@ -1,0 +1,21 @@
+{
+    "kv": {
+        "engine": "memory",
+        "root": ""
+    },
+    "logger": {
+        "opcodes_short": [],
+        "opcodes": [],
+        "final_slots_short": false,
+        "final_slots": false,
+        "codes_short": false,
+        "codes": false,
+        "return_data_short": false,
+        "return_data": false,
+        "logs_short": false,
+        "logs": true,
+        "sol_view": false
+    },
+    "output": "http://0.0.0.0:4334",
+    "past_unknown": false
+}
