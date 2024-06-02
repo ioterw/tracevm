@@ -29,7 +29,7 @@ Project includes submodules, therefore it is needed to clone the project this wa
 ```bash
 git clone https://github.com/ioterw/tracevm.git
 cd tracevm
-git cubmodule update --init
+git submodule update --init
 ```
 
 Also, `make`, `go` and `python3` should be preinstalled.
