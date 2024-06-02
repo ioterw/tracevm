@@ -14,7 +14,7 @@ The easiest way to start using the tool is to use [Docker](https://hub.docker.co
 docker pull ioterw/tracevm
 ```
 
-It is needed to copy the sample config from [here](https://github.com/ioterw/tracevm/blob/main/conf.json), and save it as `conf.json`
+It is needed to copy the sample config from [here](conf_examples/default.json), and save it as `conf.json`
 
 Run TracEVM
 
@@ -132,7 +132,7 @@ Also there is a full formula, which computes all needed data from initial initco
 }
 ```
 
-List of TracEVM opcodes can be found [here](https://github.com/ioterw/tracevm/blob/main/tracer/dep_tracer/opcodes_backend.go)
+List of TracEVM opcodes can be found [here](tracer/dep_tracer/opcodes_backend.go)
 
 ## Found a bug?
 
