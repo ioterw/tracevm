@@ -132,7 +132,7 @@ Also there is a full formula, which computes all needed data from initial initco
 }
 ```
 
-List of TracEVM opcodes can be found [here](https://github.com/ioterw/tracevm/blob/main/tracer/dep_tracer/opcodes_backend.go)
+List of TracEVM opcodes can be found [here](tracer/dep_tracer/opcodes_backend.go)
 
 ## Found a bug?
 
