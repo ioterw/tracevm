@@ -14,7 +14,7 @@ The easiest way to start using the tool is to use [Docker](https://hub.docker.co
 docker pull ioterw/tracevm
 ```
 
-It is needed to copy the sample config from [here](https://github.com/ioterw/tracevm/blob/main/conf.json), and save it as `conf.json`
+It is needed to copy the sample config from [here](conf_examples/default.json), and save it as `conf.json`
 
 Run TracEVM
 
