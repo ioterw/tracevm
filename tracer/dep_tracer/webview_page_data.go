@@ -15,12 +15,25 @@ var WebviewPageData string = `<!DOCTYPE html>
 
     <title>Traces</title>
     <style>
-        body {background-color: grey;}
+        body { background-color: grey; }
+        a:link { color: white;}
+        a:visited { color: white; }
+        a:hover { color: grey; }
+        a:active { color: white; }
     </style>
 </head>
 <body>
+    <div style="position:fixed; right:30px; top:20px;">
+        <a href="javascript:clear()">Clear</a>
+    </div>
     <pre id=blocks></pre>
     <script>
+        function clear() {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', '/clear', true)
+            xhr.send(null)
+        }
+
         var blocksNum = 0
         var blockNodes = document.getElementById('blocks')
 

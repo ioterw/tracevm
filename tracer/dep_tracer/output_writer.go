@@ -64,6 +64,10 @@ func NewHttpWriter(url string) *HttpWriter {
         w.Write(res.data)
     })
 
+    http.HandleFunc("/clear", func(w http.ResponseWriter, r *http.Request) {
+        res.data = []byte{}
+    })
+
     go http.ListenAndServe(addr, nil)
     return res
 }
