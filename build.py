@@ -28,6 +28,7 @@ def main():
     os.mkdir('build')
     shutil.copy('run.py', 'build')
     shutil.copy('geth', 'build')
+    shutil.copy('conf_examples/default.json', 'conf.json')
     shutil.copy('conf.json', 'build')
 
 if __name__ == '__main__':
