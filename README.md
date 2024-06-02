@@ -134,6 +134,8 @@ Also there is a full formula, which computes all needed data from initial initco
 
 List of TracEVM opcodes can be found [here](tracer/dep_tracer/opcodes_backend.go)
 
+Other conf examples can be found [here](conf_examples)
+
 ## Found a bug?
 
 Please open an [issue](https://github.com/ioterw/tracevm/issues) and supply solidity code that produced unexpected behaviour.
