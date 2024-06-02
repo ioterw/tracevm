@@ -5,7 +5,7 @@
     },
     "logger": {
         "opcodes_short": ["e0", "e1"],
-        "opcodes": [],
+        "opcodes": ["e0", "e1"],
         "final_slots_short": false,
         "final_slots": false,
         "codes_short": false,
