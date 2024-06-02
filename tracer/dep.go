@@ -189,7 +189,7 @@ func (t *Dep) OnOpcode(pc uint64, op byte, gas, cost uint64, scope tracing.OpCon
     }
 
     if err != nil {
-        dep_tracer.DataError{
+        dep_tracer.DataError {
             Reverted: true,
         }.Handle(t.db, t.state)
         t.returnHandled = true
@@ -259,7 +259,7 @@ func (t *Dep) OnFault(pc uint64, op byte, gas, cost uint64, _ tracing.OpContext,
         return
     }
 
-    dep_tracer.DataError{
+    dep_tracer.DataError {
         Reverted: true,
     }.Handle(t.db, t.state)
     t.returnHandled = true
