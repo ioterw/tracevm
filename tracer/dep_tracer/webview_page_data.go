@@ -28,14 +28,16 @@ var WebviewPageData string = `<!DOCTYPE html>
     </div>
     <pre id=blocks></pre>
     <script>
+        var blocksNum = 0
+        var blockNodes = document.getElementById('blocks')
+
         function clear() {
             var xhr = new XMLHttpRequest();
             xhr.open('GET', '/clear', true)
             xhr.send(null)
+            blocksNum = 0
+            blockNodes.textContent = ''
         }
-
-        var blocksNum = 0
-        var blockNodes = document.getElementById('blocks')
 
         function handle() {
             var xhr = new XMLHttpRequest();
