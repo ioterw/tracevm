@@ -4,7 +4,6 @@ import (
     "github.com/holiman/uint256"
 
     "github.com/ethereum/go-ethereum/crypto"
-    "github.com/ethereum/go-ethereum/core/vm"
 )
 
 const (
@@ -130,14 +129,14 @@ type PushHandler struct {
     data DataPush
 }
 func (oh *PushHandler) Register(handlers map[byte]OPHandler) {
-    for i := vm.PUSH0; i <= vm.PUSH32; i++ {
+    for i := PUSH0; i <= PUSH32; i++ {
         handlers[byte(i)] = oh
     }
 }
 func (oh *PushHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     oh.data = DataPush {
         Pc: pc,
-        Size: uint64(op) - uint64(vm.PUSH0),
+        Size: uint64(op) - uint64(PUSH0),
     }
 
     return DIRECTION_NONE
@@ -152,13 +151,13 @@ type DupHandler struct {
     data DataDup
 }
 func (oh *DupHandler) Register(handlers map[byte]OPHandler) {
-    for i := vm.DUP1; i <= vm.DUP16; i++ {
+    for i := DUP1; i <= DUP16; i++ {
         handlers[byte(i)] = oh
     }
 }
 func (oh *DupHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     oh.data = DataDup {
-        Size: 1 + int(op) - int(vm.DUP1),
+        Size: 1 + int(op) - int(DUP1),
     }
 
     return DIRECTION_NONE
@@ -173,13 +172,13 @@ type SwapHandler struct {
     data DataSwap
 }
 func (oh *SwapHandler) Register(handlers map[byte]OPHandler) {
-    for i := vm.SWAP1; i <= vm.SWAP16; i++ {
+    for i := SWAP1; i <= SWAP16; i++ {
         handlers[byte(i)] = oh
     }
 }
 func (oh *SwapHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     oh.data = DataSwap {
-        Size: 2 + int64(op) - int64(vm.SWAP1),
+        Size: 2 + int64(op) - int64(SWAP1),
     }
 
     return DIRECTION_NONE
@@ -194,7 +193,7 @@ type MStoreHandler struct {
     data DataMStore
 }
 func (oh *MStoreHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.MSTORE)] = oh
+    handlers[byte(MSTORE)] = oh
 }
 func (oh *MStoreHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     oh.data = DataMStore {
@@ -213,7 +212,7 @@ type MLoadHandler struct {
     data DataMLoad
 }
 func (oh *MLoadHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.MLOAD)] = oh
+    handlers[byte(MLOAD)] = oh
 }
 func (oh *MLoadHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     oh.data = DataMLoad {
@@ -229,7 +228,7 @@ func (oh *MLoadHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {
 
 type GasHandler struct {}
 func (oh *GasHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.GAS)] = oh
+    handlers[byte(GAS)] = oh
 }
 func (oh *GasHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -245,7 +244,7 @@ func (oh *GasHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 type CallValueHandler struct {}
 func (oh *CallValueHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.CALLVALUE)] = oh
+    handlers[byte(CALLVALUE)] = oh
 }
 func (oh *CallValueHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -261,7 +260,7 @@ func (oh *CallValueHandler) Exit(db *SimpleDB, state *TransactionDB, success boo
 
 type AddressHandler struct {}
 func (oh *AddressHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.ADDRESS)] = oh
+    handlers[byte(ADDRESS)] = oh
 }
 func (oh *AddressHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -277,7 +276,7 @@ func (oh *AddressHandler) Exit(db *SimpleDB, state *TransactionDB, success bool)
 
 type IsZeroHandler struct {}
 func (oh *IsZeroHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.ISZERO)] = oh
+    handlers[byte(ISZERO)] = oh
 }
 func (oh *IsZeroHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -293,7 +292,7 @@ func (oh *IsZeroHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) 
 
 type NotHandler struct {}
 func (oh *NotHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.NOT)] = oh
+    handlers[byte(NOT)] = oh
 }
 func (oh *NotHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -311,7 +310,7 @@ type ByteHandler struct {
     data DataByte
 }
 func (oh *ByteHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.BYTE)] = oh
+    handlers[byte(BYTE)] = oh
 }
 func (oh *ByteHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     oh.data = DataByte {
@@ -329,7 +328,7 @@ type JumpHandler struct {
     data DataEmpty
 }
 func (oh *JumpHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.JUMP)] = oh
+    handlers[byte(JUMP)] = oh
 }
 func (oh *JumpHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     oh.data = DataEmpty {
@@ -348,7 +347,7 @@ type JumpIHandler struct {
     data DataEmpty
 }
 func (oh *JumpIHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.JUMPI)] = oh
+    handlers[byte(JUMPI)] = oh
 }
 func (oh *JumpIHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     oh.data = DataEmpty {
@@ -367,7 +366,7 @@ type JumpDestHandler struct {
     data DataEmpty
 }
 func (oh *JumpDestHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.JUMPDEST)] = oh
+    handlers[byte(JUMPDEST)] = oh
 }
 func (oh *JumpDestHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     oh.data = DataEmpty {
@@ -386,7 +385,7 @@ type PopHandler struct {
     data DataPop
 }
 func (oh *PopHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.POP)] = oh
+    handlers[byte(POP)] = oh
 }
 func (oh *PopHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     oh.data = DataPop {}
@@ -403,7 +402,7 @@ type CodeCopyHandler struct {
     data DataCodeCopy
 }
 func (oh *CodeCopyHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.CODECOPY)] = oh
+    handlers[byte(CODECOPY)] = oh
 }
 func (oh *CodeCopyHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     uint64CodeOffset, overflow := stack[stackSize-2].Uint64WithOverflow()
@@ -428,7 +427,7 @@ type ExtCodeSizeHandler struct {
     data DataExtCodeSize
 }
 func (oh *ExtCodeSizeHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.EXTCODESIZE)] = oh
+    handlers[byte(EXTCODESIZE)] = oh
 }
 func (oh *ExtCodeSizeHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     oh.data = DataExtCodeSize {
@@ -447,7 +446,7 @@ func (oh *ExtCodeSizeHandler) Exit(db *SimpleDB, state *TransactionDB, success b
 
 type RevertHandler struct {}
 func (oh *RevertHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.REVERT)] = oh
+    handlers[byte(REVERT)] = oh
 }
 func (oh *RevertHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     DataRevert {
@@ -463,7 +462,7 @@ func (oh *RevertHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) 
 
 type ReturnHandler struct {}
 func (oh *ReturnHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.RETURN)] = oh
+    handlers[byte(RETURN)] = oh
 }
 func (oh *ReturnHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     offset := stack[stackSize-1].Uint64()
@@ -494,7 +493,7 @@ func (oh *ReturnHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) 
 
 type StopHandler struct {}
 func (oh *StopHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.STOP)] = oh
+    handlers[byte(STOP)] = oh
 }
 func (oh *StopHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     DataStop {}.Handle(db, state)
@@ -509,7 +508,7 @@ type SLoadHandler struct {
     data DataSLoad
 }
 func (oh *SLoadHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.SLOAD)] = oh
+    handlers[byte(SLOAD)] = oh
 }
 func (oh *SLoadHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     oh.data = DataSLoad {
@@ -528,7 +527,7 @@ type SStoreHandler struct {
     data DataSStore
 }
 func (oh *SStoreHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.SSTORE)] = oh
+    handlers[byte(SSTORE)] = oh
 }
 func (oh *SStoreHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     oh.data = DataSStore {
@@ -547,7 +546,7 @@ type TLoadHandler struct {
     data DataTLoad
 }
 func (oh *TLoadHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.TLOAD)] = oh
+    handlers[byte(TLOAD)] = oh
 }
 func (oh *TLoadHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     oh.data = DataTLoad {
@@ -565,7 +564,7 @@ type TStoreHandler struct {
     data DataTStore
 }
 func (oh *TStoreHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.TSTORE)] = oh
+    handlers[byte(TSTORE)] = oh
 }
 func (oh *TStoreHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     oh.data = DataTStore {
@@ -581,7 +580,7 @@ func (oh *TStoreHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) 
 
 type AddHandler struct {}
 func (oh *AddHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.ADD)] = oh
+    handlers[byte(ADD)] = oh
 }
 func (oh *AddHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -597,7 +596,7 @@ func (oh *AddHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 type DivHandler struct {}
 func (oh *DivHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.DIV)] = oh
+    handlers[byte(DIV)] = oh
 }
 func (oh *DivHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -613,7 +612,7 @@ func (oh *DivHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 type SDivHandler struct {}
 func (oh *SDivHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.SDIV)] = oh
+    handlers[byte(SDIV)] = oh
 }
 func (oh *SDivHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -629,7 +628,7 @@ func (oh *SDivHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 type ModHandler struct {}
 func (oh *ModHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.MOD)] = oh
+    handlers[byte(MOD)] = oh
 }
 func (oh *ModHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -645,7 +644,7 @@ func (oh *ModHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 type SModHandler struct {}
 func (oh *SModHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.SMOD)] = oh
+    handlers[byte(SMOD)] = oh
 }
 func (oh *SModHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -661,7 +660,7 @@ func (oh *SModHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 type AddModHandler struct {}
 func (oh *AddModHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.ADDMOD)] = oh
+    handlers[byte(ADDMOD)] = oh
 }
 func (oh *AddModHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -677,7 +676,7 @@ func (oh *AddModHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) 
 
 type MulModHandler struct {}
 func (oh *MulModHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.MULMOD)] = oh
+    handlers[byte(MULMOD)] = oh
 }
 func (oh *MulModHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -693,7 +692,7 @@ func (oh *MulModHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) 
 
 type ExpHandler struct {}
 func (oh *ExpHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.EXP)] = oh
+    handlers[byte(EXP)] = oh
 }
 func (oh *ExpHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -709,7 +708,7 @@ func (oh *ExpHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 type SignExtendHandler struct {}
 func (oh *SignExtendHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.SIGNEXTEND)] = oh
+    handlers[byte(SIGNEXTEND)] = oh
 }
 func (oh *SignExtendHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -725,7 +724,7 @@ func (oh *SignExtendHandler) Exit(db *SimpleDB, state *TransactionDB, success bo
 
 type MulHandler struct {}
 func (oh *MulHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.MUL)] = oh
+    handlers[byte(MUL)] = oh
 }
 func (oh *MulHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -741,7 +740,7 @@ func (oh *MulHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 type SubHandler struct {}
 func (oh *SubHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.SUB)] = oh
+    handlers[byte(SUB)] = oh
 }
 func (oh *SubHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -757,7 +756,7 @@ func (oh *SubHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 type SHLHandler struct {}
 func (oh *SHLHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.SHL)] = oh
+    handlers[byte(SHL)] = oh
 }
 func (oh *SHLHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -773,7 +772,7 @@ func (oh *SHLHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 type SHRHandler struct {}
 func (oh *SHRHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.SHR)] = oh
+    handlers[byte(SHR)] = oh
 }
 func (oh *SHRHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -789,7 +788,7 @@ func (oh *SHRHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 type SARHandler struct {}
 func (oh *SARHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.SAR)] = oh
+    handlers[byte(SAR)] = oh
 }
 func (oh *SARHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -805,7 +804,7 @@ func (oh *SARHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 type AndHandler struct {}
 func (oh *AndHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.AND)] = oh
+    handlers[byte(AND)] = oh
 }
 func (oh *AndHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -821,7 +820,7 @@ func (oh *AndHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 type OrHandler struct {}
 func (oh *OrHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.OR)] = oh
+    handlers[byte(OR)] = oh
 }
 func (oh *OrHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -837,7 +836,7 @@ func (oh *OrHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 type XorHandler struct {}
 func (oh *XorHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.XOR)] = oh
+    handlers[byte(XOR)] = oh
 }
 func (oh *XorHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -853,7 +852,7 @@ func (oh *XorHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 type GTHandler struct {}
 func (oh *GTHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.GT)] = oh
+    handlers[byte(GT)] = oh
 }
 func (oh *GTHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -869,7 +868,7 @@ func (oh *GTHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 type EQHandler struct {}
 func (oh *EQHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.EQ)] = oh
+    handlers[byte(EQ)] = oh
 }
 func (oh *EQHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -885,7 +884,7 @@ func (oh *EQHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 type LTHandler struct {}
 func (oh *LTHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.LT)] = oh
+    handlers[byte(LT)] = oh
 }
 func (oh *LTHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -901,7 +900,7 @@ func (oh *LTHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 type SLTHandler struct {}
 func (oh *SLTHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.SLT)] = oh
+    handlers[byte(SLT)] = oh
 }
 func (oh *SLTHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -917,7 +916,7 @@ func (oh *SLTHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 type SGTHandler struct {}
 func (oh *SGTHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.SGT)] = oh
+    handlers[byte(SGT)] = oh
 }
 func (oh *SGTHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -935,7 +934,7 @@ type KeccakHandler struct {
     data DataKeccak
 }
 func (oh *KeccakHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.KECCAK256)] = oh
+    handlers[byte(KECCAK256)] = oh
 }
 func (oh *KeccakHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     oh.data = DataKeccak {
@@ -956,7 +955,7 @@ type CallDataSizeHandler struct {
     data DataCalldataSize
 }
 func (oh *CallDataSizeHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.CALLDATASIZE)] = oh
+    handlers[byte(CALLDATASIZE)] = oh
 }
 func (oh *CallDataSizeHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     oh.data = DataCalldataSize {}
@@ -974,7 +973,7 @@ type CallDataCopyHandler struct {
     data DataCalldataCopy
 }
 func (oh *CallDataCopyHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.CALLDATACOPY)] = oh
+    handlers[byte(CALLDATACOPY)] = oh
 }
 func (oh *CallDataCopyHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     dataOffset64, overflow := stack[stackSize-2].Uint64WithOverflow()
@@ -999,7 +998,7 @@ type CallDataLoadHandler struct {
     data DataCalldataLoad
 }
 func (oh *CallDataLoadHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.CALLDATALOAD)] = oh
+    handlers[byte(CALLDATALOAD)] = oh
 }
 func (oh *CallDataLoadHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     offset64, overflow := stack[stackSize-1].Uint64WithOverflow()
@@ -1020,7 +1019,7 @@ func (oh *CallDataLoadHandler) Exit(db *SimpleDB, state *TransactionDB, success 
 
 type ReturnDataSizeHandler struct {}
 func (oh *ReturnDataSizeHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.RETURNDATASIZE)] = oh
+    handlers[byte(RETURNDATASIZE)] = oh
 }
 func (oh *ReturnDataSizeHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {    
     return DIRECTION_NONE
@@ -1035,7 +1034,7 @@ func (oh *ReturnDataSizeHandler) Exit(db *SimpleDB, state *TransactionDB, succes
 
 type BalanceHandler struct {}
 func (oh *BalanceHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.BALANCE)] = oh
+    handlers[byte(BALANCE)] = oh
 }
 func (oh *BalanceHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -1052,7 +1051,7 @@ type ExtCodeCopyHandler struct {
     data DataExtCodeCopy
 }
 func (oh *ExtCodeCopyHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.EXTCODECOPY)] = oh
+    handlers[byte(EXTCODECOPY)] = oh
 }
 func (oh *ExtCodeCopyHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     uint64CodeOffset, overflow := stack[stackSize-3].Uint64WithOverflow()
@@ -1079,7 +1078,7 @@ type ReturnDataCopyHandler struct {
     data DataReturndataCopy
 }
 func (oh *ReturnDataCopyHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.RETURNDATACOPY)] = oh
+    handlers[byte(RETURNDATACOPY)] = oh
 }
 func (oh *ReturnDataCopyHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     oh.data = DataReturndataCopy {
@@ -1098,7 +1097,7 @@ func (oh *ReturnDataCopyHandler) Exit(db *SimpleDB, state *TransactionDB, succes
 
 type OriginHandler struct {}
 func (oh *OriginHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.ORIGIN)] = oh
+    handlers[byte(ORIGIN)] = oh
 }
 func (oh *OriginHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -1114,7 +1113,7 @@ func (oh *OriginHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) 
 
 type CallerHandler struct {}
 func (oh *CallerHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.CALLER)] = oh
+    handlers[byte(CALLER)] = oh
 }
 func (oh *CallerHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -1130,7 +1129,7 @@ func (oh *CallerHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) 
 
 type CodeSizeHandler struct {}
 func (oh *CodeSizeHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.CODESIZE)] = oh
+    handlers[byte(CODESIZE)] = oh
 }
 func (oh *CodeSizeHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -1145,7 +1144,7 @@ func (oh *CodeSizeHandler) Exit(db *SimpleDB, state *TransactionDB, success bool
 
 type GasPriceHandler struct {}
 func (oh *GasPriceHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.GASPRICE)] = oh
+    handlers[byte(GASPRICE)] = oh
 }
 func (oh *GasPriceHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -1162,7 +1161,7 @@ type ExtCodeHashHandler struct {
     data DataExtCodeHash
 }
 func (oh *ExtCodeHashHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.EXTCODEHASH)] = oh
+    handlers[byte(EXTCODEHASH)] = oh
 }
 func (oh *ExtCodeHashHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     oh.data = DataExtCodeHash {
@@ -1181,7 +1180,7 @@ func (oh *ExtCodeHashHandler) Exit(db *SimpleDB, state *TransactionDB, success b
 
 type BlockHashHandler struct {}
 func (oh *BlockHashHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.BLOCKHASH)] = oh
+    handlers[byte(BLOCKHASH)] = oh
 }
 func (oh *BlockHashHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -1196,7 +1195,7 @@ func (oh *BlockHashHandler) Exit(db *SimpleDB, state *TransactionDB, success boo
 
 type CoinbaseHandler struct {}
 func (oh *CoinbaseHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.COINBASE)] = oh
+    handlers[byte(COINBASE)] = oh
 }
 func (oh *CoinbaseHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -1212,7 +1211,7 @@ func (oh *CoinbaseHandler) Exit(db *SimpleDB, state *TransactionDB, success bool
 
 type TimestampHandler struct {}
 func (oh *TimestampHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.TIMESTAMP)] = oh
+    handlers[byte(TIMESTAMP)] = oh
 }
 func (oh *TimestampHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -1228,7 +1227,7 @@ func (oh *TimestampHandler) Exit(db *SimpleDB, state *TransactionDB, success boo
 
 type NumberHandler struct {}
 func (oh *NumberHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.NUMBER)] = oh
+    handlers[byte(NUMBER)] = oh
 }
 func (oh *NumberHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -1244,7 +1243,7 @@ func (oh *NumberHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) 
 
 type GasLimitHandler struct {}
 func (oh *GasLimitHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.GASLIMIT)] = oh
+    handlers[byte(GASLIMIT)] = oh
 }
 func (oh *GasLimitHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -1260,7 +1259,7 @@ func (oh *GasLimitHandler) Exit(db *SimpleDB, state *TransactionDB, success bool
 
 type ChainIDHandler struct {}
 func (oh *ChainIDHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.CHAINID)] = oh
+    handlers[byte(CHAINID)] = oh
 }
 func (oh *ChainIDHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -1276,7 +1275,7 @@ func (oh *ChainIDHandler) Exit(db *SimpleDB, state *TransactionDB, success bool)
 
 type SelfBalanceHandler struct {}
 func (oh *SelfBalanceHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.SELFBALANCE)] = oh
+    handlers[byte(SELFBALANCE)] = oh
 }
 func (oh *SelfBalanceHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -1291,7 +1290,7 @@ func (oh *SelfBalanceHandler) Exit(db *SimpleDB, state *TransactionDB, success b
 
 type BaseFeeHandler struct {}
 func (oh *BaseFeeHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.BASEFEE)] = oh
+    handlers[byte(BASEFEE)] = oh
 }
 func (oh *BaseFeeHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -1307,7 +1306,7 @@ func (oh *BaseFeeHandler) Exit(db *SimpleDB, state *TransactionDB, success bool)
 
 type PCHandler struct {}
 func (oh *PCHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.PC)] = oh
+    handlers[byte(PC)] = oh
 }
 func (oh *PCHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -1323,7 +1322,7 @@ func (oh *PCHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
 
 type MSizeHandler struct {}
 func (oh *MSizeHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.MSIZE)] = oh
+    handlers[byte(MSIZE)] = oh
 }
 func (oh *MSizeHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -1341,7 +1340,7 @@ type LogHandler struct {
     data DataLog
 }
 func (oh *LogHandler) Register(handlers map[byte]OPHandler) {
-    for i := vm.LOG0; i <= vm.LOG4; i++ {
+    for i := LOG0; i <= LOG4; i++ {
         handlers[byte(i)] = oh
     }
 }
@@ -1349,7 +1348,7 @@ func (oh *LogHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256
     oh.data = DataLog {
         Offset: stack[stackSize-1].Uint64(),
         Size: stack[stackSize-2].Uint64(),
-        TopicsNum: int(op) - int(vm.LOG0),
+        TopicsNum: int(op) - int(LOG0),
     }
     return DIRECTION_NONE
 }
@@ -1363,7 +1362,7 @@ type CallHandler struct {
     DataEnd DataCallEnd
 }
 func (oh *CallHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.CALL)] = oh
+    handlers[byte(CALL)] = oh
 }
 func (oh *CallHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     DataCallStart {
@@ -1393,7 +1392,7 @@ type CallCodeHandler struct {
     DataEnd DataCallEnd
 }
 func (oh *CallCodeHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.CALLCODE)] = oh
+    handlers[byte(CALLCODE)] = oh
 }
 func (oh *CallCodeHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     DataCallStart {
@@ -1423,7 +1422,7 @@ type DelegateCallHandler struct {
     DataEnd DataCallEnd
 }
 func (oh *DelegateCallHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.DELEGATECALL)] = oh
+    handlers[byte(DELEGATECALL)] = oh
 }
 func (oh *DelegateCallHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     DataCallStart {
@@ -1453,7 +1452,7 @@ type StaticCallHandler struct {
     DataEnd DataCallEnd
 }
 func (oh *StaticCallHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.STATICCALL)] = oh
+    handlers[byte(STATICCALL)] = oh
 }
 func (oh *StaticCallHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     DataCallStart {
@@ -1483,7 +1482,7 @@ type CreateHandler struct {
     DataEnd DataCreateEnd
 }
 func (oh *CreateHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.CREATE)] = oh
+    handlers[byte(CREATE)] = oh
 }
 func (oh *CreateHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     newAddr := [20]byte(crypto.CreateAddress([20]byte(addr), stateDB.GetNonce([20]byte(addr))))
@@ -1525,7 +1524,7 @@ type Create2Handler struct {
     DataEnd DataCreate2End
 }
 func (oh *Create2Handler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.CREATE2)] = oh
+    handlers[byte(CREATE2)] = oh
 }
 func (oh *Create2Handler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     offset := stack[stackSize-2].Uint64()
@@ -1568,7 +1567,7 @@ type MCopyHandler struct {
     data DataMCopy
 }
 func (oh *MCopyHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.MCOPY)] = oh
+    handlers[byte(MCOPY)] = oh
 }
 func (oh *MCopyHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     oh.data = DataMCopy {
@@ -1587,7 +1586,7 @@ func (oh *MCopyHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {
 
 type BlobBaseFeeHandler struct {}
 func (oh *BlobBaseFeeHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.BLOBBASEFEE)] = oh
+    handlers[byte(BLOBBASEFEE)] = oh
 }
 func (oh *BlobBaseFeeHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -1603,7 +1602,7 @@ func (oh *BlobBaseFeeHandler) Exit(db *SimpleDB, state *TransactionDB, success b
 
 type BlobHashHandler struct {}
 func (oh *BlobHashHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.BLOBHASH)] = oh
+    handlers[byte(BLOBHASH)] = oh
 }
 func (oh *BlobHashHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -1620,7 +1619,7 @@ type PrevrandaoOrDifficultyHandler struct {
     // difficulty || random - since london
 }
 func (oh *PrevrandaoOrDifficultyHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.PREVRANDAO)] = oh
+    handlers[byte(PREVRANDAO)] = oh
 }
 func (oh *PrevrandaoOrDifficultyHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     return DIRECTION_NONE
@@ -1644,7 +1643,7 @@ type SelfdestructHandler struct {
     // selfdestruct || selfdestruct6780 - since cancun
 }
 func (oh *SelfdestructHandler) Register(handlers map[byte]OPHandler) {
-    handlers[byte(vm.SELFDESTRUCT)] = oh
+    handlers[byte(SELFDESTRUCT)] = oh
 }
 func (oh *SelfdestructHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     if isSelfdestruct6780 {

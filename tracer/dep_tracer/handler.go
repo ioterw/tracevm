@@ -8,8 +8,6 @@ import (
     "encoding/hex"
     "encoding/json"
     "github.com/holiman/uint256"
-    
-    "github.com/ethereum/go-ethereum/core/vm"
 )
 
 type DepHandler struct {
@@ -207,8 +205,8 @@ func (handler *DepHandler) HandleFault(op byte) {
         panic("HandleFault is not activated")
     }
 
-    o := vm.OpCode(op)
-    if o == vm.REVERT {
+    o := OpCode(op)
+    if o == REVERT {
         return
     }
 
