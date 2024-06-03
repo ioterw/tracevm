@@ -2,8 +2,6 @@ package dep_tracer
 
 import (
     "encoding/binary"
-
-    "github.com/ethereum/go-ethereum/common"
 )
 
 func SetupDB(kvEngine, kvRoot string, toLog *LoggerDefinition, pastUnknown bool, writer OutputWriter) *SimpleDB {
@@ -27,7 +25,7 @@ func SetupDB(kvEngine, kvRoot string, toLog *LoggerDefinition, pastUnknown bool,
 func TransactionStart(db *SimpleDB, data DataStart) *TransactionDB {
     var state *TransactionDB
     if data.IsCreate {
-        state = TransactionDBCreate(db, data.Address, common.Address{}, data.Input)
+        state = TransactionDBCreate(db, data.Address, Address{}, data.Input)
     } else {
         state = TransactionDBCall(db, data.Address, data.Address, data.Input, data.Code)
     }
@@ -124,7 +122,7 @@ func (data DataSLoad) Handle(db *SimpleDB, state *TransactionDB) {
     value := state.GetSlot(&data.Slot, valueBin)
     valueFormula := state.FormulaDepWithShorts(value[:])
 
-    val := state.FormulaNewWithShorts(OPSLoad, valueBin[:], []common.Hash{valueFormula.hash, slotFormula.hash})
+    val := state.FormulaNewWithShorts(OPSLoad, valueBin[:], []Hash{valueFormula.hash, slotFormula.hash})
     state.Stack().PushN(FormulaDEPBytes(val))
 }
 
@@ -136,7 +134,7 @@ func (data DataSStore) Handle(db *SimpleDB, state *TransactionDB) {
     valueBin := data.Value.Bytes32()
     valueFormula := state.FormulaDepWithShorts(value[:])
 
-    val := state.FormulaNewWithShorts(OPSStore, valueBin[:], []common.Hash{valueFormula.hash, slotFormula.hash})
+    val := state.FormulaNewWithShorts(OPSStore, valueBin[:], []Hash{valueFormula.hash, slotFormula.hash})
     state.SetSlot(&data.Slot, FormulaDEPBytes(val))
 }
 
@@ -156,7 +154,7 @@ func (data DataOne) Handle(db *SimpleDB, state *TransactionDB) { // aNum
     aFormula := state.FormulaDepWithShorts(a[:])
 
     valBin := data.Value.Bytes32()
-    val := state.FormulaNewWithShorts(data.Op, valBin[:], []common.Hash{aFormula.hash})
+    val := state.FormulaNewWithShorts(data.Op, valBin[:], []Hash{aFormula.hash})
     state.Stack().PushN(FormulaDEPBytes(val))
 }
 
@@ -168,7 +166,7 @@ func (data DataTwo) Handle(db *SimpleDB, state *TransactionDB) {
     bFormula := state.FormulaDepWithShorts(b[:])
 
     valBin := data.Value.Bytes32()
-    val := state.FormulaNewWithShorts(data.Op, valBin[:], []common.Hash{aFormula.hash, bFormula.hash})
+    val := state.FormulaNewWithShorts(data.Op, valBin[:], []Hash{aFormula.hash, bFormula.hash})
     state.Stack().PushN(FormulaDEPBytes(val))
 }
 
@@ -183,7 +181,7 @@ func (data DataThree) Handle(db *SimpleDB, state *TransactionDB) {
     cFormula := state.FormulaDepWithShorts(c[:])
 
     valBin := data.Value.Bytes32()
-    val := state.FormulaNewWithShorts(data.Op, valBin[:], []common.Hash{aFormula.hash, bFormula.hash, cFormula.hash})
+    val := state.FormulaNewWithShorts(data.Op, valBin[:], []Hash{aFormula.hash, bFormula.hash, cFormula.hash})
     state.Stack().PushN(FormulaDEPBytes(val))
 }
 
@@ -208,7 +206,7 @@ func (data DataKeccak) Handle(db *SimpleDB, state *TransactionDB) {
 
     d := state.Memory().Load(data.Offset, data.Size)
     dataFormula := state.FormulaDepWithShorts(d)
-    val := state.FormulaNewWithShorts(OPKeccak, data.Result[:], []common.Hash{dataFormula.hash})
+    val := state.FormulaNewWithShorts(OPKeccak, data.Result[:], []Hash{dataFormula.hash})
     state.Stack().PushN(FormulaDEPBytes(val))
 }
 
@@ -218,7 +216,7 @@ func (data DataCodeSize) Handle(db *SimpleDB, state *TransactionDB) {
     codeSizeBin := []byte{}
     codeSizeBin = binary.BigEndian.AppendUint64(codeSizeBin, data.CodeSize)
 
-    val := state.FormulaNewWithShorts(OPSize, codeSizeBin, []common.Hash{codeFormula.hash})
+    val := state.FormulaNewWithShorts(OPSize, codeSizeBin, []Hash{codeFormula.hash})
     state.Stack().PushN(FormulaDEPBytes(val))
 }
 
@@ -231,7 +229,7 @@ func (data DataExtCodeSize) Handle(db *SimpleDB, state *TransactionDB) {
 
     codeSizeBin := data.CodeSize.Bytes32()
 
-    val := state.FormulaNewWithShorts(OPCodeSize, codeSizeBin[:], []common.Hash{codeFormula.hash, addrFormula.hash})
+    val := state.FormulaNewWithShorts(OPCodeSize, codeSizeBin[:], []Hash{codeFormula.hash, addrFormula.hash})
     state.Stack().PushN(FormulaDEPBytes(val))
 }
 
@@ -244,7 +242,7 @@ func (data DataExtCodeHash) Handle(db *SimpleDB, state *TransactionDB) {
 
     hashBin := data.Hash
 
-    val := state.FormulaNewWithShorts(OPCodeKeccak, hashBin[:], []common.Hash{codeFormula.hash, addrFormula.hash})
+    val := state.FormulaNewWithShorts(OPCodeKeccak, hashBin[:], []Hash{codeFormula.hash, addrFormula.hash})
     state.Stack().PushN(FormulaDEPBytes(val))
 }
 
@@ -254,7 +252,7 @@ func (data DataCalldataSize) Handle(db *SimpleDB, state *TransactionDB) {
 
     dataFormula := state.FormulaDepWithShorts(state.Calldata())
 
-    val := state.FormulaNewWithShorts(OPSize, sizeBin, []common.Hash{dataFormula.hash})
+    val := state.FormulaNewWithShorts(OPSize, sizeBin, []Hash{dataFormula.hash})
     state.Stack().PushN(FormulaDEPBytes(val))
 }
 
@@ -264,7 +262,7 @@ func (data DataReturndataSize) Handle(db *SimpleDB, state *TransactionDB) {
 
     dataFormula := state.FormulaDepWithShorts(state.returndata)
 
-    val := state.FormulaNewWithShorts(OPSize, sizeBin, []common.Hash{dataFormula.hash})
+    val := state.FormulaNewWithShorts(OPSize, sizeBin, []Hash{dataFormula.hash})
     state.Stack().PushN(FormulaDEPBytes(val))
 }
 
@@ -374,7 +372,7 @@ func (data DataBalance) Handle(db *SimpleDB, state *TransactionDB) {
     addr := state.Stack().Pop()
     addrFormula := state.FormulaDepWithShorts(addr[32-20:])
 
-    val := state.FormulaNewWithShorts(OPBalance, balanceBin[:], []common.Hash{balance.hash, addrFormula.hash})
+    val := state.FormulaNewWithShorts(OPBalance, balanceBin[:], []Hash{balance.hash, addrFormula.hash})
     state.Stack().PushN(FormulaDEPBytes(val))
 }
 
@@ -385,7 +383,7 @@ func (data DataSelfBalance) Handle(db *SimpleDB, state *TransactionDB) {
     addrBin := state.Address()
     addr := state.ConstantNewWithShorts(OPConstant, addrBin[:])
 
-    val := state.FormulaNewWithShorts(OPBalance, balanceBin[:], []common.Hash{balance.hash, addr.hash})
+    val := state.FormulaNewWithShorts(OPBalance, balanceBin[:], []Hash{balance.hash, addr.hash})
     state.Stack().PushN(FormulaDEPBytes(val))
 }
 
@@ -396,7 +394,7 @@ func (data DataBlockHash) Handle(db *SimpleDB, state *TransactionDB) {
     blockNumber := state.Stack().Pop()
     blockNumberFormula := state.FormulaDepWithShorts(blockNumber[:])
 
-    val := state.FormulaNewWithShorts(OPBlockHash, hashBin[:], []common.Hash{hash.hash, blockNumberFormula.hash})
+    val := state.FormulaNewWithShorts(OPBlockHash, hashBin[:], []Hash{hash.hash, blockNumberFormula.hash})
     state.Stack().PushN(FormulaDEPBytes(val))
 }
 
@@ -407,7 +405,7 @@ func (data DataBlobHash) Handle(db *SimpleDB, state *TransactionDB) {
     blockNumber := state.Stack().Pop()
     blockNumberFormula := state.FormulaDepWithShorts(blockNumber[:])
 
-    val := state.FormulaNewWithShorts(OPBlobHash, hashBin[:], []common.Hash{hash.hash, blockNumberFormula.hash})
+    val := state.FormulaNewWithShorts(OPBlobHash, hashBin[:], []Hash{hash.hash, blockNumberFormula.hash})
     state.Stack().PushN(FormulaDEPBytes(val))
 }
 
@@ -418,7 +416,7 @@ func (data DataCreateStart) Handle(db *SimpleDB, state *TransactionDB) {
 
     initcode := state.Memory().Load(data.Offset, data.Size)
 
-    state.Create(data.Address, common.Address{}, initcode, data.Data)
+    state.Create(data.Address, Address{}, initcode, data.Data)
     db.logger.SetContractAddress(state.Address(), state.AddressVersion(), state.CodeAddress(), state.CodeHash(), state.InitcodeHash())
 }
 
@@ -437,7 +435,7 @@ func (data DataCreate2Start) Handle(db *SimpleDB, state *TransactionDB) {
 
     initcode := state.Memory().Load(data.Offset, data.Size)
 
-    state.Create(data.Address, common.Address{}, initcode, data.Data)
+    state.Create(data.Address, Address{}, initcode, data.Data)
     db.logger.SetContractAddress(state.Address(), state.AddressVersion(), state.CodeAddress(), state.CodeHash(), state.InitcodeHash())
 }
 
@@ -489,8 +487,8 @@ func (data DataPrecompileEcRecover) Handle(db *SimpleDB, state *TransactionDB) {
 
     zeroesNum := 32 - 20 // returns zeroes on the left in the sake of something unclear
 
-    formula := state.FormulaNewWithShorts(OPEcRecover, data.Result[zeroesNum:], []common.Hash{hash.hash, v.hash, r.hash, s.hash})
-    args := []common.Hash{}
+    formula := state.FormulaNewWithShorts(OPEcRecover, data.Result[zeroesNum:], []Hash{hash.hash, v.hash, r.hash, s.hash})
+    args := []Hash{}
     h := ConstantInitZero.hash
     for i := 0; i < zeroesNum; i++ {
         args = append(args, h)
@@ -505,7 +503,7 @@ func (data DataPrecompileSha256) Handle(db *SimpleDB, state *TransactionDB) { //
     d := state.Calldata()
 
     dataFormula := state.FormulaDepWithShorts(d)
-    val := state.FormulaNewWithShorts(OPSha256, data.Result, []common.Hash{dataFormula.hash})
+    val := state.FormulaNewWithShorts(OPSha256, data.Result, []Hash{dataFormula.hash})
 
     state.Return(FormulaDEPBytes(val), data.Result)
 }
@@ -516,8 +514,8 @@ func (data DataPrecompileRipemd160) Handle(db *SimpleDB, state *TransactionDB) {
     d := state.Calldata()
 
     dataFormula := state.FormulaDepWithShorts(d)
-    formula := state.FormulaNewWithShorts(OPRipemd160, data.Result[zeroesNum:], []common.Hash{dataFormula.hash})
-    args := []common.Hash{}
+    formula := state.FormulaNewWithShorts(OPRipemd160, data.Result[zeroesNum:], []Hash{dataFormula.hash})
+    args := []Hash{}
     h := ConstantInitZero.hash
     for i := 0; i < zeroesNum; i++ {
         args = append(args, h)
@@ -548,7 +546,7 @@ func (data DataPrecompileModExp) Handle(db *SimpleDB, state *TransactionDB) { //
     i += data.ESize
     m := state.FormulaDepWithShorts(OverflowSliceDEPBytes(d, i, data.MSize))
 
-    val := state.FormulaNewWithShorts(OPModExp, data.Result, []common.Hash{b.hash, e.hash, m.hash})
+    val := state.FormulaNewWithShorts(OPModExp, data.Result, []Hash{b.hash, e.hash, m.hash})
     state.Return(FormulaDEPBytes(val), data.Result)
 }
 
@@ -567,8 +565,8 @@ func (data DataPrecompileEcAdd) Handle(db *SimpleDB, state *TransactionDB) { // 
     x2 := state.FormulaDepWithShorts(OverflowSliceDEPBytes(d, 64, 32))
     y2 := state.FormulaDepWithShorts(OverflowSliceDEPBytes(d, 96, 32))
 
-    valX := state.FormulaNewWithShorts(OPEcAddX, resX, []common.Hash{x1.hash, y1.hash, x2.hash, y2.hash})
-    valY := state.FormulaNewWithShorts(OPEcAddY, resY, []common.Hash{x1.hash, y1.hash, x2.hash, y2.hash})
+    valX := state.FormulaNewWithShorts(OPEcAddX, resX, []Hash{x1.hash, y1.hash, x2.hash, y2.hash})
+    valY := state.FormulaNewWithShorts(OPEcAddY, resY, []Hash{x1.hash, y1.hash, x2.hash, y2.hash})
 
     val := FormulaDEPBytes(valX)
     val = append(val, FormulaDEPBytes(valY)...)
@@ -589,8 +587,8 @@ func (data DataPrecompileEcMul) Handle(db *SimpleDB, state *TransactionDB) { // 
     y1 := state.FormulaDepWithShorts(OverflowSliceDEPBytes(d, 32, 32))
     s  := state.FormulaDepWithShorts(OverflowSliceDEPBytes(d, 64, 32))
 
-    valX := state.FormulaNewWithShorts(OPEcMulX, resX, []common.Hash{x1.hash, y1.hash, s.hash})
-    valY := state.FormulaNewWithShorts(OPEcMulY, resY, []common.Hash{x1.hash, y1.hash, s.hash})
+    valX := state.FormulaNewWithShorts(OPEcMulX, resX, []Hash{x1.hash, y1.hash, s.hash})
+    valY := state.FormulaNewWithShorts(OPEcMulY, resY, []Hash{x1.hash, y1.hash, s.hash})
 
     val := FormulaDEPBytes(valX)
     val = append(val, FormulaDEPBytes(valY)...)
@@ -604,7 +602,7 @@ func (data DataPrecompileEcPairing) Handle(db *SimpleDB, state *TransactionDB) {
     }
 
     d := state.Calldata()
-    args := []common.Hash{};
+    args := []Hash{};
     for i := uint64(0); i < uint64(len(d)); i += 192 {
         x1 := state.FormulaDepWithShorts(OverflowSliceDEPBytes(d, i,     32))
         y1 := state.FormulaDepWithShorts(OverflowSliceDEPBytes(d, i+32,  32))
@@ -631,7 +629,7 @@ func (data DataPrecompileBlake2F) Handle(db *SimpleDB, state *TransactionDB) { /
     t      := state.FormulaDepWithShorts(OverflowSliceDEPBytes(d, 196, 16))
     f      := state.FormulaDepWithShorts(OverflowSliceDEPBytes(d, 212, 1))
 
-    val := state.FormulaNewWithShorts(OPBlake2F, data.Result, []common.Hash{rounds.hash, h.hash, m.hash, t.hash, f.hash})
+    val := state.FormulaNewWithShorts(OPBlake2F, data.Result, []Hash{rounds.hash, h.hash, m.hash, t.hash, f.hash})
     state.Return(FormulaDEPBytes(val), data.Result)
 }
 
@@ -639,7 +637,7 @@ func (data DataPointEvaluation) Handle(db *SimpleDB, state *TransactionDB) { // 
     d := state.Calldata()
 
     dataFormula := state.FormulaDepWithShorts(d)
-    val := state.FormulaNewWithShorts(OPPointEvaluation, data.Result, []common.Hash{dataFormula.hash})
+    val := state.FormulaNewWithShorts(OPPointEvaluation, data.Result, []Hash{dataFormula.hash})
 
     state.Return(FormulaDEPBytes(val), data.Result)
 }

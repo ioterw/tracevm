@@ -3,25 +3,23 @@ package dep_tracer
 import (
     "crypto/sha256"
     "encoding/binary"
-
-    "github.com/ethereum/go-ethereum/common"
 )
 
 type Formula struct {
     opcode   uint8
     result   []byte
-    operands []common.Hash
-    hash     common.Hash
+    operands []Hash
+    hash     Hash
 }
 
 func ConstantNew(opcode uint8, result []byte) Formula {
-    res := Formula{opcode, result, []common.Hash{}, common.Hash{}}
+    res := Formula{opcode, result, []Hash{}, Hash{}}
     res.init_hash()
     return res
 }
 
-func FormulaNew(opcode uint8, result []byte, operands []common.Hash) Formula {
-    res := Formula{opcode, result, operands, common.Hash{}}
+func FormulaNew(opcode uint8, result []byte, operands []Hash) Formula {
+    res := Formula{opcode, result, operands, Hash{}}
     res.init_hash()
     return res
 }
@@ -38,7 +36,7 @@ func FormulaBin(val []byte) Formula {
     operandsSize := binary.BigEndian.Uint64(val[i:i+8])
     i += 8
     for j := uint64(0); j < operandsSize; j++ {
-        f.operands = append(f.operands, *(*common.Hash)(val[i:i+32]))
+        f.operands = append(f.operands, *(*Hash)(val[i:i+32]))
         i += 32
     }
     f.init_hash()
@@ -61,8 +59,8 @@ func (f *Formula) IsConstant() bool {
     return OpcodeIsConstant(f.opcode)
 }
 
-func(f *Formula) init_hash() common.Hash {
-    if f.hash != (common.Hash{}) {
+func(f *Formula) init_hash() Hash {
+    if f.hash != (Hash{}) {
         return f.hash
     }
     val := []byte{f.opcode}

@@ -7,8 +7,6 @@ import (
     "encoding/hex"
     "encoding/json"
     "github.com/holiman/uint256"
-
-    "github.com/ethereum/go-ethereum/common"
 )
 
 type LoggerDefinition struct {
@@ -75,13 +73,13 @@ func (ld *LoggerDefinition) OpcodeShort(opcode uint8) bool {
 type LoggerContext struct {
     block          *big.Int
     timestamp      uint64
-    origin         common.Address
-    txHash         common.Hash
-    address        common.Address
+    origin         Address
+    txHash         Hash
+    address        Address
     addressVersion uint64
-    codeAddress    common.Address
-    codeHash       common.Hash
-    initcodeHash   common.Hash
+    codeAddress    Address
+    codeHash       Hash
+    initcodeHash   Hash
 }
 
 type Logger struct {
@@ -99,14 +97,14 @@ func NewLogger(simpleDB *SimpleDB, toLog LoggerDefinition, writer OutputWriter) 
     return l
 }
 
-func (l *Logger) EnterContext(block *big.Int, timestamp uint64, origin common.Address, txHash common.Hash) {
+func (l *Logger) EnterContext(block *big.Int, timestamp uint64, origin Address, txHash Hash) {
     l.context.block     = block
     l.context.timestamp = timestamp
     l.context.origin    = origin
     l.context.txHash    = txHash
 }
 
-func (l *Logger) SetContractAddress(address common.Address, addressVersion uint64, codeAddress common.Address, codeHash, initcodeHash common.Hash) {
+func (l *Logger) SetContractAddress(address Address, addressVersion uint64, codeAddress Address, codeHash, initcodeHash Hash) {
     l.context.address        = address
     l.context.addressVersion = addressVersion
     l.context.codeAddress    = codeAddress
@@ -121,21 +119,21 @@ func (l *Logger) LogLog(log Log) {
     l.logFormulasWithShorts(eventType, log.addr, log.addrVersion, log.codeAddr, append([]Formula{log.data}, log.topics...), fullEnabled, shortEnabled)
 }
 
-func (l *Logger) LogReturnData(addr common.Address, addrVersion uint64, codeAddress common.Address, val []DEPByte) {
+func (l *Logger) LogReturnData(addr Address, addrVersion uint64, codeAddress Address, val []DEPByte) {
     eventType := "return"
     fullEnabled := l.toLog.ReturnDataFull
     shortEnabled := l.toLog.ReturnDataShort
     l.logFormulasWithShorts(eventType, addr, addrVersion, codeAddress, []Formula{l.simpleDB.FormulaDepWithShorts(val)}, fullEnabled, shortEnabled)
 }
 
-func (l *Logger) LogFinalCode(addr common.Address, addrVersion uint64, codeAddress common.Address, val []DEPByte) {
+func (l *Logger) LogFinalCode(addr Address, addrVersion uint64, codeAddress Address, val []DEPByte) {
     eventType := "final_code"
     fullEnabled := l.toLog.CodesFull
     shortEnabled := l.toLog.CodesShort
     l.logFormulasWithShorts(eventType, addr, addrVersion, codeAddress, []Formula{l.simpleDB.FormulaDepWithShorts(val)}, fullEnabled, shortEnabled)
 }
 
-func (l *Logger) LogFinalSlot(addr common.Address, addrVersion uint64, codeAddress common.Address, val []DEPByte, slot *uint256.Int) {
+func (l *Logger) LogFinalSlot(addr Address, addrVersion uint64, codeAddress Address, val []DEPByte, slot *uint256.Int) {
 
     eventType := "final_slot"
     fullEnabled := l.toLog.FinalSlotsFull
@@ -150,7 +148,7 @@ func (l *Logger) LogOpcode(formula Formula) {
     l.logFormulasWithShorts(eventType, l.context.address, l.context.addressVersion, l.context.codeAddress, []Formula{formula}, fullEnabled, shortEnabled)
 }
 
-func (l *Logger) logFormulasWithShorts(eventType string, addr common.Address, addrVersion uint64, codeAddr common.Address, formulas []Formula, fullEnabled, shortEnabled bool) {
+func (l *Logger) logFormulasWithShorts(eventType string, addr Address, addrVersion uint64, codeAddr Address, formulas []Formula, fullEnabled, shortEnabled bool) {
     outputFormulas := make(map[string][]Formula)
     if fullEnabled {
         outputFormulas["full"] = formulas
@@ -197,8 +195,8 @@ func solidityView(s *SimpleDB, formula Formula) {
 
 func (l *Logger) logFormulas(
     eventType string,
-    addr common.Address, addrVersion uint64,
-    codeAddr common.Address,
+    addr Address, addrVersion uint64,
+    codeAddr Address,
     outputFormulas map[string][]Formula,
 ) { 
     type MessageJSON struct {

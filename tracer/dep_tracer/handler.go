@@ -9,7 +9,6 @@ import (
     "encoding/json"
     "github.com/holiman/uint256"
     
-    "github.com/ethereum/go-ethereum/common"
     "github.com/ethereum/go-ethereum/core/vm"
 )
 
@@ -23,12 +22,12 @@ type DepHandler struct {
     state         *TransactionDB
     prevOPHandler OPHandler
     opHandlers    map[byte]OPHandler
-    pcHandlers    map[common.Address]PrecompileHandler
+    pcHandlers    map[Address]PrecompileHandler
     retHandlers   []OPHandler
 
     // input variables
     stateDB            StateDB
-    returnAddress      common.Address
+    returnAddress      Address
     returnInput        []byte
     isRandom           bool
     isSelfdestruct6780 bool
@@ -88,14 +87,14 @@ func NewDepHandler(cfg json.RawMessage) *DepHandler {
         retHandlers:   []OPHandler{},
 
         stateDB:       nil,
-        returnAddress: common.Address{},
+        returnAddress: Address{},
         returnInput:   nil,
     }
 }
 
 type StateDB interface {
-    GetNonce(addr common.Address) uint64
-    GetCode(addr common.Address) []byte
+    GetNonce(addr [20]byte) uint64
+    GetCode(addr [20]byte) []byte
 }
 
 func (handler *DepHandler) StartTransactionRecording(

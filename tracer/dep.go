@@ -48,6 +48,16 @@ func NewDep(cfg json.RawMessage) (*tracing.Hooks, error) {
     }, nil
 }
 
+type StateDB struct {
+    stateDB tracing.StateDB
+}
+func (s StateDB) GetNonce(addr [20]byte) uint64 {
+    return s.stateDB.GetNonce(addr)
+}
+func (s StateDB) GetCode(addr [20]byte) []byte {
+    return s.stateDB.GetCode(addr)
+}
+
 func (t *Dep) OnBlockStart(ev tracing.BlockEvent) {
     if t.writingBlock {
         panic("OnBlockStart called during writingBlock state")
@@ -85,7 +95,7 @@ func (t *Dep) OnTxStart(vm *tracing.VMContext, tx *types.Transaction, from commo
     isSelfdestruct6780 := vm.ChainConfig.IsCancun(t.blockNumber, t.time)
     isRandom := vm.ChainConfig.IsLondon(t.blockNumber)
 
-    t.handler.StartTransactionRecording(create, addr, tx.Data(), vm.BlockNumber, vm.Time, from, tx.Hash(), code, isSelfdestruct6780, isRandom, vm.StateDB)
+    t.handler.StartTransactionRecording(create, addr, tx.Data(), vm.BlockNumber, vm.Time, from, tx.Hash(), code, isSelfdestruct6780, isRandom, StateDB{vm.StateDB})
 }
 
 func (t *Dep) OnTxEnd(receipt *types.Receipt, err error) {

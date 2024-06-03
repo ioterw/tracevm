@@ -8,8 +8,6 @@ import (
     "encoding/hex"
     "encoding/binary"
     "github.com/holiman/uint256"
-
-    "github.com/ethereum/go-ethereum/common"
 )
 
 type CommitFormula struct {
@@ -18,8 +16,8 @@ type CommitFormula struct {
 }
 
 type SimpleDB struct {
-    formulasWithShorts map[common.Hash]*CommitFormula
-    formulas           map[common.Hash]*CommitFormula
+    formulasWithShorts map[Hash]*CommitFormula
+    formulas           map[Hash]*CommitFormula
     formulasDB         DB
     slotsDB            DB
     codesDB            DB
@@ -31,11 +29,11 @@ type SimpleDB struct {
     pastUnknown        bool
 }
 
-func CodeHash(code []byte) common.Hash {
+func CodeHash(code []byte) Hash {
     return sha256.Sum256(code)
 }
 
-func storeLocation(addr common.Address, version uint64, slot *uint256.Int, pos uint8) []byte {
+func storeLocation(addr Address, version uint64, slot *uint256.Int, pos uint8) []byte {
     res := addr[:]
     res = binary.BigEndian.AppendUint64(res, version)
     slotBytes := slot.Bytes32()
@@ -44,13 +42,13 @@ func storeLocation(addr common.Address, version uint64, slot *uint256.Int, pos u
     return res
 }
 
-func codeHashLocation(addr common.Address, version uint64) []byte {
+func codeHashLocation(addr Address, version uint64) []byte {
     res := addr[:]
     res = binary.BigEndian.AppendUint64(res, version)
     return res
 }
 
-func codeLocation(addr common.Address, version uint64, pos uint64) []byte {
+func codeLocation(addr Address, version uint64, pos uint64) []byte {
     res := addr[:]
     res = binary.BigEndian.AppendUint64(res, version)
     res = binary.BigEndian.AppendUint64(res, pos)
@@ -97,7 +95,7 @@ func SimpleDBNew(
 }
 
 func (s *SimpleDB) CommitDEPBytes(data []DEPByte) {
-    prevFormula := common.Hash{}
+    prevFormula := Hash{}
     for _, b := range data {
         curFormula := b.formula
         if curFormula != prevFormula {
@@ -108,7 +106,7 @@ func (s *SimpleDB) CommitDEPBytes(data []DEPByte) {
 }
 
 func (s *SimpleDB) CommitDEPBytesWithShorts(data []DEPByte) {
-    prevFormula := common.Hash{}
+    prevFormula := Hash{}
     for _, b := range data {
         curFormula := b.formula
         if curFormula != prevFormula {
@@ -118,7 +116,7 @@ func (s *SimpleDB) CommitDEPBytesWithShorts(data []DEPByte) {
     }
 }
 
-func (s *SimpleDB) commitFormulaInternal(hash common.Hash, ignoreExistance bool) {
+func (s *SimpleDB) commitFormulaInternal(hash Hash, ignoreExistance bool) {
     cf, ok := s.formulas[hash]
     if !ok {
         if !ignoreExistance {
@@ -136,11 +134,11 @@ func (s *SimpleDB) commitFormulaInternal(hash common.Hash, ignoreExistance bool)
     }
 }
 
-func (s *SimpleDB) CommitFormula(hash common.Hash) {
+func (s *SimpleDB) CommitFormula(hash Hash) {
     s.commitFormulaInternal(hash, false)
 }
 
-func (s *SimpleDB) commitFormulaWithShortsInternal(hash common.Hash, ignoreExistance bool) {
+func (s *SimpleDB) commitFormulaWithShortsInternal(hash Hash, ignoreExistance bool) {
     cf, ok := s.formulasWithShorts[hash]
     if !ok {
         if !ignoreExistance {
@@ -171,13 +169,13 @@ func (s *SimpleDB) commitFormulaWithShortsInternal(hash common.Hash, ignoreExist
     }
 }
 
-func (s *SimpleDB) CommitFormulaWithShorts(hash common.Hash) {
+func (s *SimpleDB) CommitFormulaWithShorts(hash Hash) {
     s.commitFormulaWithShortsInternal(hash, false)
 }
 
 func (s *SimpleDB) ResetFormulas() {
-    s.formulasWithShorts = make(map[common.Hash]*CommitFormula)
-    s.formulas           = make(map[common.Hash]*CommitFormula)
+    s.formulasWithShorts = make(map[Hash]*CommitFormula)
+    s.formulas           = make(map[Hash]*CommitFormula)
     s.formulas[ConstantInitZero.hash] = &CommitFormula{ConstantInitZero, true}
     s.formulas[ConstantZero.hash] = &CommitFormula{ConstantZero, true}
     for _, short := range s.shorts {
@@ -185,7 +183,7 @@ func (s *SimpleDB) ResetFormulas() {
     }
 }
 
-func (s *SimpleDB) GetFormulaWithShorts(hash common.Hash) Formula {
+func (s *SimpleDB) GetFormulaWithShorts(hash Hash) Formula {
     if cf, ok := s.formulasWithShorts[hash]; ok {
         return cf.formula
     }
@@ -198,7 +196,7 @@ func (s *SimpleDB) GetFormulaWithShorts(hash common.Hash) Formula {
     return formula
 }
 
-func (s *SimpleDB) GetFormula(hash common.Hash) Formula {
+func (s *SimpleDB) GetFormula(hash Hash) Formula {
     if cf, ok := s.formulas[hash]; ok {
         return cf.formula
     }
@@ -230,7 +228,7 @@ func (s *SimpleDB) ConstantNew(opcode uint8, result []byte) Formula {
     return res
 }
 
-func (s *SimpleDB) FormulaNewWithShorts(opcode uint8, result []byte, operands []common.Hash) Formula {
+func (s *SimpleDB) FormulaNewWithShorts(opcode uint8, result []byte, operands []Hash) Formula {
     res := s.FormulaNew(opcode, result, operands)
     if _, ok := s.formulasWithShorts[res.hash]; ok {
         return res
@@ -243,7 +241,7 @@ func (s *SimpleDB) FormulaNewWithShorts(opcode uint8, result []byte, operands []
     return res
 }
 
-func (s *SimpleDB) FormulaNew(opcode uint8, result []byte, operands []common.Hash) Formula {
+func (s *SimpleDB) FormulaNew(opcode uint8, result []byte, operands []Hash) Formula {
     res := FormulaNew(opcode, result, operands)
     h := res.hash
     if _, ok := s.formulas[h]; ok {
@@ -262,13 +260,13 @@ func (s *SimpleDB) FormulaSlice(formula Formula, offset, size uint64) Formula {
     }
 
     if size == 0 {
-        return s.FormulaNew(OPConcat, []byte{}, []common.Hash{})
+        return s.FormulaNew(OPConcat, []byte{}, []Hash{})
     }
 
     switch(formula.opcode) {
     case OPConcat:
         byte_parts := []byte{}
-        hash_parts := []common.Hash{}
+        hash_parts := []Hash{}
         i := uint64(0)
         for _, formulaHash := range formula.operands {
             formula1 := s.GetFormula(formulaHash)
@@ -328,7 +326,7 @@ func (s *SimpleDB) FormulaSlice(formula Formula, offset, size uint64) Formula {
         sizeOpVal := binary.BigEndian.AppendUint64([]byte{}, size)
         sizeOp := s.ConstantNew(OPConstant, sizeOpVal)
 
-        return s.FormulaNew(OPSlice, formula.result[offset:offset1], []common.Hash{formula.operands[0], offsetOp.hash, sizeOp.hash})
+        return s.FormulaNew(OPSlice, formula.result[offset:offset1], []Hash{formula.operands[0], offsetOp.hash, sizeOp.hash})
     default:
         // make slice
         offsetOpVal := binary.BigEndian.AppendUint64([]byte{}, offset)
@@ -337,13 +335,13 @@ func (s *SimpleDB) FormulaSlice(formula Formula, offset, size uint64) Formula {
         sizeOpVal := binary.BigEndian.AppendUint64([]byte{}, size)
         sizeOp := s.ConstantNew(OPConstant, sizeOpVal)
 
-        return s.FormulaNew(OPSlice, formula.result[offset:offset1], []common.Hash{formula.hash, offsetOp.hash, sizeOp.hash})
+        return s.FormulaNew(OPSlice, formula.result[offset:offset1], []Hash{formula.hash, offsetOp.hash, sizeOp.hash})
     }
 }
 
 func (s *SimpleDB) FormulaDep(val []DEPByte) Formula {
     if len(val) == 0 {
-        return s.FormulaNew(OPConcat, []byte{}, []common.Hash{})
+        return s.FormulaNew(OPConcat, []byte{}, []Hash{})
     }
 
     valBin := make([]byte, 0)
@@ -366,7 +364,7 @@ func (s *SimpleDB) FormulaDep(val []DEPByte) Formula {
         byteRanges = append(byteRanges, byteRange)
     }
 
-    res := []common.Hash{}
+    res := []Hash{}
     for _, byteRange := range byteRanges {
         rangeFirst := byteRange[0].pos
         rangeSize := byteRange[len(byteRange)-1].pos - rangeFirst + 1
@@ -385,7 +383,7 @@ func (s *SimpleDB) FormulaDep(val []DEPByte) Formula {
             sizeOp := s.ConstantNew(OPConstant, sizeOpVal)
             valBinSlice := formula.result[rangeFirst:rangeFirst+rangeSize]
             valBin = append(valBin, valBinSlice...)
-            slice := s.FormulaNew(OPSlice, valBinSlice, []common.Hash{formulaHash, offsetOp.hash, sizeOp.hash})
+            slice := s.FormulaNew(OPSlice, valBinSlice, []Hash{formulaHash, offsetOp.hash, sizeOp.hash})
             res = append(res, slice.hash)
         }
     }
@@ -398,7 +396,7 @@ func (s *SimpleDB) FormulaDep(val []DEPByte) Formula {
 
 func (s *SimpleDB) FormulaDepWithShorts(val []DEPByte) Formula {
     if len(val) == 0 {
-        return s.FormulaNewWithShorts(OPConcat, []byte{}, []common.Hash{})
+        return s.FormulaNewWithShorts(OPConcat, []byte{}, []Hash{})
     }
 
     valBin := make([]byte, 0)
@@ -421,7 +419,7 @@ func (s *SimpleDB) FormulaDepWithShorts(val []DEPByte) Formula {
         byteRanges = append(byteRanges, byteRange)
     }
 
-    res := []common.Hash{}
+    res := []Hash{}
     for _, byteRange := range byteRanges {
         rangeFirst := byteRange[0].pos
         rangeSize := byteRange[len(byteRange)-1].pos - rangeFirst + 1
@@ -440,7 +438,7 @@ func (s *SimpleDB) FormulaDepWithShorts(val []DEPByte) Formula {
             sizeOp := s.ConstantNewWithShorts(OPConstant, sizeOpVal)
             valBinSlice := formula.result[rangeFirst:rangeFirst+rangeSize]
             valBin = append(valBin, valBinSlice...)
-            slice := s.FormulaNewWithShorts(OPSlice, valBinSlice, []common.Hash{formulaHash, offsetOp.hash, sizeOp.hash})
+            slice := s.FormulaNewWithShorts(OPSlice, valBinSlice, []Hash{formulaHash, offsetOp.hash, sizeOp.hash})
             res = append(res, slice.hash)
         }
     }
@@ -456,12 +454,12 @@ func (s *SimpleDB) saveFormula(f Formula) {
     s.formulasDB.Set(hash[:], f.Bin())
 }
 
-func (s *SimpleDB) loadFormula(h common.Hash) Formula {
+func (s *SimpleDB) loadFormula(h Hash) Formula {
     val := s.formulasDB.Get(h[:], false)
     return FormulaBin(val)
 }
 
-func (s *SimpleDB) GetAddressVersion(addr common.Address) uint64 {
+func (s *SimpleDB) GetAddressVersion(addr Address) uint64 {
     val := s.versionsDB.Get(addr[:], true)
     if val == nil {
         return 0
@@ -469,14 +467,14 @@ func (s *SimpleDB) GetAddressVersion(addr common.Address) uint64 {
     return binary.BigEndian.Uint64(val)
 }
 
-func (s *SimpleDB) IncreaseAddressVersion(addr common.Address) {
+func (s *SimpleDB) IncreaseAddressVersion(addr Address) {
     version := s.GetAddressVersion(addr) + 1
     versionBin := []byte{}
     versionBin = binary.BigEndian.AppendUint64(versionBin, version)
     s.versionsDB.Set(addr[:], versionBin)
 }
 
-func (s *SimpleDB) GetSlot(addr common.Address, slot *uint256.Int, value common.Hash) []DEPByte {
+func (s *SimpleDB) GetSlot(addr Address, slot *uint256.Int, value Hash) []DEPByte {
     version := s.GetAddressVersion(addr)
     res := make([]DEPByte, 0)
     for i := uint8(0); i < 32; i++ {
@@ -499,7 +497,7 @@ func (s *SimpleDB) GetSlot(addr common.Address, slot *uint256.Int, value common.
     panic("Invalid number of results for slot")
 }
 
-func (s *SimpleDB) SetSlot(addr common.Address, slot *uint256.Int, val []DEPByte) {
+func (s *SimpleDB) SetSlot(addr Address, slot *uint256.Int, val []DEPByte) {
     if len(val) != 32 {
         panic("Invalid number of arguments for slot")
     }
@@ -510,13 +508,13 @@ func (s *SimpleDB) SetSlot(addr common.Address, slot *uint256.Int, val []DEPByte
     }
 }
 
-func (s *SimpleDB) GetCode(addr common.Address, code []byte) (common.Hash, common.Hash, []DEPByte) {
+func (s *SimpleDB) GetCode(addr Address, code []byte) (Hash, Hash, []DEPByte) {
     version := s.GetAddressVersion(addr)
 
     location := codeHashLocation(addr, version)
     codeHashData := s.codeHashesDB.Get(location, true)
-    codeHash := common.Hash{}
-    initcodeHash := common.Hash{}
+    codeHash := Hash{}
+    initcodeHash := Hash{}
     if codeHashData != nil {
         copy(codeHash[:],     codeHashData[:32])
         copy(initcodeHash[:], codeHashData[32:])
@@ -543,7 +541,7 @@ func (s *SimpleDB) GetCode(addr common.Address, code []byte) (common.Hash, commo
     return codeHash, initcodeHash, res
 }
 
-func (s *SimpleDB) SetCode(addr common.Address, val []DEPByte, codeHash, initcodeHash common.Hash) {
+func (s *SimpleDB) SetCode(addr Address, val []DEPByte, codeHash, initcodeHash Hash) {
     version := s.GetAddressVersion(addr)
 
     location := codeHashLocation(addr, version)
@@ -578,7 +576,7 @@ func (s *SimpleDB) Print(f Formula) {
             res += strings.Repeat("    ", offset) + OpcodeToString[f1.opcode] + "()\n"
             return res
         }
-        h0 := common.Hash{}
+        h0 := Hash{}
         repeated := 0
         res += strings.Repeat("    ", offset) + OpcodeToString[f1.opcode] + "( # 0x" + hex.EncodeToString(f1.result) + "\n"
         for i, h1 := range f1.operands {

@@ -4,14 +4,12 @@ import (
     "fmt"
     "encoding/hex"
     "github.com/holiman/uint256"
-
-    "github.com/ethereum/go-ethereum/common"
 )
 
 type Log struct {
-    addr        common.Address
+    addr        Address
     addrVersion uint64
-    codeAddr    common.Address
+    codeAddr    Address
     data        Formula
     topics      []Formula
 }
@@ -23,11 +21,11 @@ type TransactionState struct {
     logs      []Log
 }
 
-func transactionStateNew(simpleDB *SimpleDB, isCreate bool, addr, codeAddr common.Address) *TransactionState {
+func transactionStateNew(simpleDB *SimpleDB, isCreate bool, addr, codeAddr Address) *TransactionState {
     ts := new(TransactionState)
     ts.overlayDB = OverlayDBNew(simpleDB)
     addrVersion := ts.overlayDB.GetAddressVersion(addr)
-    ts.stacked = StackedNew(isCreate, addr, addrVersion, codeAddr, []DEPByte{}, []DEPByte{}, common.Hash{}, common.Hash{})
+    ts.stacked = StackedNew(isCreate, addr, addrVersion, codeAddr, []DEPByte{}, []DEPByte{}, Hash{}, Hash{})
     ts.logs = make([]Log, 0)
     return ts
 }
@@ -41,7 +39,7 @@ func (ts *TransactionState) Copy() *TransactionState {
     return res
 }
 
-func (ts *TransactionState) AddLog(addr common.Address, addrVersion uint64, codeAddr common.Address, data Formula, topics []Formula) {
+func (ts *TransactionState) AddLog(addr Address, addrVersion uint64, codeAddr Address, data Formula, topics []Formula) {
     log := Log{}
     log.addr = addr
     log.addrVersion = addrVersion
@@ -80,7 +78,7 @@ type TransactionDB struct {
     returndata []DEPByte
 }
 
-func TransactionDBCall(simpleDB *SimpleDB, addr, codeAddr common.Address, calldataBin []byte, code []byte) *TransactionDB {
+func TransactionDBCall(simpleDB *SimpleDB, addr, codeAddr Address, calldataBin []byte, code []byte) *TransactionDB {
     t := new(TransactionDB)
     t.simpleDB = simpleDB
     t.states = []*TransactionState{transactionStateNew(simpleDB, false, addr, codeAddr)}
@@ -91,7 +89,7 @@ func TransactionDBCall(simpleDB *SimpleDB, addr, codeAddr common.Address, callda
     return t
 }
 
-func TransactionDBCreate(simpleDB *SimpleDB, addr, codeAddr common.Address, initcodeBin []byte) *TransactionDB {
+func TransactionDBCreate(simpleDB *SimpleDB, addr, codeAddr Address, initcodeBin []byte) *TransactionDB {
     t := new(TransactionDB)
     t.simpleDB = simpleDB
     t.states = []*TransactionState{transactionStateNew(simpleDB, true, addr, codeAddr)}
@@ -117,14 +115,14 @@ func (t *TransactionDB) Commit() {
     t.simpleDB.ResetFormulas()
 }
 
-func (t *TransactionDB) Call(addr, codeAddr common.Address, calldata []DEPByte, code []byte) {
+func (t *TransactionDB) Call(addr, codeAddr Address, calldata []DEPByte, code []byte) {
     t.dupState()
     t.returndata = make([]DEPByte, 0)
     addrVersion := t.GetAddressVersion(addr)
     t.curState().stacked.Push(false, addr, addrVersion, codeAddr, calldata, t.GetCode(codeAddr, code), t.GetCodeHash(codeAddr, code), t.GetInitcodeHash(codeAddr, code))
 }
 
-func (t *TransactionDB) Create(addr, codeAddr common.Address, initcode []DEPByte, initcodeBin []byte) {
+func (t *TransactionDB) Create(addr, codeAddr Address, initcode []DEPByte, initcodeBin []byte) {
     t.dupState()
     t.returndata = make([]DEPByte, 0)
     codeHash := CodeHash(initcodeBin)
@@ -152,7 +150,7 @@ func (t *TransactionDB) Selfdestruct() {
     t.Return([]DEPByte{}, []byte{})
 }
 
-func (t *TransactionDB) Created(addr common.Address) bool {
+func (t *TransactionDB) Created(addr Address) bool {
     return t.curState().overlayDB.Created(addr)
 }
 
@@ -175,11 +173,11 @@ func (t *TransactionDB) popState() *TransactionState {
     return res
 }
 
-func (t *TransactionDB) GetAddressVersion(addr common.Address) uint64 {
+func (t *TransactionDB) GetAddressVersion(addr Address) uint64 {
     return t.curState().overlayDB.GetAddressVersion(addr)
 }
 
-func (t *TransactionDB) GetSlot(slot *uint256.Int, value common.Hash) []DEPByte {
+func (t *TransactionDB) GetSlot(slot *uint256.Int, value Hash) []DEPByte {
     return t.curState().overlayDB.GetSlot(t.Address(), slot, value).data
 }
 
@@ -195,23 +193,23 @@ func (t *TransactionDB) SetTransient(slot *uint256.Int, val []DEPByte) {
     t.curState().overlayDB.SetTransient(t.Address(), slot, val)
 }
 
-func (t *TransactionDB) GetCode(addr common.Address, code []byte) []DEPByte {
+func (t *TransactionDB) GetCode(addr Address, code []byte) []DEPByte {
     return t.curState().overlayDB.GetCode(addr, code).data
 }
 
-func (t *TransactionDB) GetCodeHash(addr common.Address, code []byte) common.Hash {
+func (t *TransactionDB) GetCodeHash(addr Address, code []byte) Hash {
     return t.curState().overlayDB.GetCode(addr, code).codeHash
 }
 
-func (t *TransactionDB) GetInitcodeHash(addr common.Address, code []byte) common.Hash {
+func (t *TransactionDB) GetInitcodeHash(addr Address, code []byte) Hash {
     return t.curState().overlayDB.GetCode(addr, code).initcodeHash
 }
 
-func (t *TransactionDB) SetCode(val []DEPByte, valBytes []byte, initcodeHash common.Hash) {
+func (t *TransactionDB) SetCode(val []DEPByte, valBytes []byte, initcodeHash Hash) {
     t.curState().overlayDB.SetCode(t.Address(), t.CodeAddress(), val, valBytes, initcodeHash)
 }
 
-func (t *TransactionDB) Address() common.Address {
+func (t *TransactionDB) Address() Address {
     return t.curState().stacked.Cur().addr
 }
 
@@ -219,15 +217,15 @@ func (t *TransactionDB) AddressVersion() uint64 {
     return t.curState().stacked.Cur().addrVersion
 }
 
-func (t *TransactionDB) CodeAddress() common.Address {
+func (t *TransactionDB) CodeAddress() Address {
     return t.curState().stacked.Cur().codeAddr
 }
 
-func (t *TransactionDB) CodeHash() common.Hash {
+func (t *TransactionDB) CodeHash() Hash {
     return t.curState().stacked.Cur().codeHash
 }
 
-func (t *TransactionDB) InitcodeHash() common.Hash {
+func (t *TransactionDB) InitcodeHash() Hash {
     return t.curState().stacked.Cur().initcodeHash
 }
 
@@ -263,7 +261,7 @@ func (t *TransactionDB) ConstantNewWithShorts(opcode uint8, result []byte) Formu
     return t.simpleDB.ConstantNewWithShorts(opcode, result)
 }
 
-func (t *TransactionDB) FormulaNewWithShorts(opcode uint8, result []byte, operands []common.Hash) Formula {
+func (t *TransactionDB) FormulaNewWithShorts(opcode uint8, result []byte, operands []Hash) Formula {
     return t.simpleDB.FormulaNewWithShorts(opcode, result, operands)
 }
 

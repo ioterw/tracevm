@@ -4,8 +4,6 @@ import (
     "fmt"
     "math/big"
     "github.com/holiman/uint256"
-
-    "github.com/ethereum/go-ethereum/common"
 )
 
 
@@ -29,12 +27,12 @@ func (b *BigInt) UnmarshalJSON(p []byte) error {
 
 type DataStart struct {
     IsCreate  bool           `json:"is_create"`
-    Address   common.Address `json:"address"`
+    Address   Address `json:"address"`
     Input     []byte         `json:"input"`
     Block     *big.Int       `json:"block"`
     Timestamp uint64         `json:"timestamp"`
-    Origin    common.Address `json:"origin"`
-    TxHash    common.Hash    `json:"tx_hash"`
+    Origin    Address `json:"origin"`
+    TxHash    Hash    `json:"tx_hash"`
     Code      []byte         `json:"code"`
 }
 
@@ -123,7 +121,7 @@ type DataByte struct {
 }
 
 type DataKeccak struct {
-    Result common.Hash `json:"result"`
+    Result Hash `json:"result"`
     Offset uint64     `json:"offset"`
     Size   uint64     `json:"size"`
 }
@@ -133,14 +131,14 @@ type DataCodeSize struct {
 }
 
 type DataExtCodeSize struct {
-    Address  common.Address `json:"address"`
+    Address  Address `json:"address"`
     CodeSize uint256.Int    `json:"code_size"`
     Code     []byte         `json:"code"`
 }
 
 type DataExtCodeHash struct {
-    Address  common.Address `json:"address"`
-    Hash     common.Hash    `json:"hash"`
+    Address  Address `json:"address"`
+    Hash     Hash    `json:"hash"`
     Code     []byte         `json:"code"`
 }
 
@@ -159,7 +157,7 @@ type DataCodeCopy struct {
 }
 
 type DataExtCodeCopy struct {
-    Address      common.Address `json:"address"`
+    Address      Address `json:"address"`
     MemoryOffset uint64         `json:"memory_offset"`
     CodeOffset   uint64         `json:"code_offset"`
     Length       uint64         `json:"length"`
@@ -218,39 +216,39 @@ type DataSelfBalance struct {
 }
 
 type DataBlockHash struct {
-    Hash common.Hash `json:"hash"`
+    Hash Hash `json:"hash"`
 }
 
 type DataBlobHash struct {
-    Hash common.Hash `json:"hash"`
+    Hash Hash `json:"hash"`
 }
 
 type DataCreateStart struct {
-    Address common.Address `json:"address"`
+    Address Address `json:"address"`
     Offset  uint64     `json:"offset"`
     Size    uint64     `json:"size"`
     Data    []byte   `json:"data"`
 }
 
 type DataCreateEnd struct {
-    Address common.Address `json:"address"`
+    Address Address `json:"address"`
 }
 
 type DataCreate2Start struct {
-    Address common.Address `json:"address"`
+    Address Address `json:"address"`
     Offset  uint64     `json:"offset"`
     Size    uint64     `json:"size"`
     Data    []byte   `json:"data"`
 }
 
 type DataCreate2End struct {
-    Address common.Address `json:"address"`
+    Address Address `json:"address"`
 }
 
 type DataCallStart struct {
     N           int            `json:"n"`
-    Address     common.Address `json:"address"`
-    CodeAddress common.Address `json:"code_address"`
+    Address     Address `json:"address"`
+    CodeAddress Address `json:"code_address"`
     InOffset    uint64         `json:"in_offset"`
     InSize      uint64         `json:"in_size"`
     Code        []byte         `json:"code"`

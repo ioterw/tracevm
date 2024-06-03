@@ -1,23 +1,19 @@
 package dep_tracer
 
-import(
-    "github.com/ethereum/go-ethereum/common"
-)
-
 type StackedElement struct {
     isCreate     bool
-    addr         common.Address
+    addr         Address
     addrVersion  uint64
-    codeAddr     common.Address
+    codeAddr     Address
     calldata     []DEPByte
     code         []DEPByte
-    codeHash     common.Hash
-    initcodeHash common.Hash
+    codeHash     Hash
+    initcodeHash Hash
     stack        *Stack
     memory       *Memory
 }
 
-func StackedElementNew(isCreate bool, addr common.Address, addrVersion uint64, codeAddr common.Address, calldata []DEPByte, code []DEPByte, codeHash, initcodeHash common.Hash) *StackedElement {
+func StackedElementNew(isCreate bool, addr Address, addrVersion uint64, codeAddr Address, calldata []DEPByte, code []DEPByte, codeHash, initcodeHash Hash) *StackedElement {
     se := new(StackedElement)
     se.isCreate = isCreate
     se.addr = addr
@@ -51,7 +47,7 @@ type Stacked struct {
     elements []*StackedElement
 }
 
-func StackedNew(isCreate bool, addr common.Address, addrVersion uint64, codeAddr common.Address, calldata []DEPByte, code []DEPByte, codeHash, initcodeHash common.Hash) *Stacked {
+func StackedNew(isCreate bool, addr Address, addrVersion uint64, codeAddr Address, calldata []DEPByte, code []DEPByte, codeHash, initcodeHash Hash) *Stacked {
     s := new(Stacked)
     s.elements = make([]*StackedElement, 0)
     s.Push(isCreate, addr, addrVersion, codeAddr, calldata, code, codeHash, initcodeHash)
@@ -67,7 +63,7 @@ func (s *Stacked) Copy() *Stacked {
     return res
 }
 
-func (s *Stacked) Push(isCreate bool, addr common.Address, addrVersion uint64, codeAddr common.Address, calldata []DEPByte, code []DEPByte, codeHash, initcodeHash common.Hash) {
+func (s *Stacked) Push(isCreate bool, addr Address, addrVersion uint64, codeAddr Address, calldata []DEPByte, code []DEPByte, codeHash, initcodeHash Hash) {
     se := StackedElementNew(isCreate, addr, addrVersion, codeAddr, calldata, code, codeHash, initcodeHash)
     s.elements = append(s.elements, se)
 }

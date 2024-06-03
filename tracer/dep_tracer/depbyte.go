@@ -2,13 +2,11 @@ package dep_tracer
 
 import (
     "encoding/binary"
-
-    "github.com/ethereum/go-ethereum/common"
 )
 
 type DEPByte struct {
     pos     uint64
-    formula common.Hash
+    formula Hash
 }
 
 func DEPByteFromBin(val []byte) DEPByte {
@@ -16,7 +14,7 @@ func DEPByteFromBin(val []byte) DEPByte {
     i := 0
     res.pos = binary.BigEndian.Uint64(val[i:i+8])
     i += 8
-    res.formula = *(*common.Hash)(val[i:])
+    res.formula = *(*Hash)(val[i:])
     return res
 }
 

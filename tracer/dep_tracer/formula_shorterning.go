@@ -1,9 +1,5 @@
 package dep_tracer
 
-import (
-    "github.com/ethereum/go-ethereum/common"
-)
-
 type ProtectedDefinition struct {
     ops  map[uint8]bool
     name string
@@ -33,9 +29,9 @@ func CryptoProtectedDefinition() ProtectedDefinition {
 
 
 type HashAndProtected struct {
-    hash            common.Hash
+    hash            Hash
     protected       bool
-    sourceHash      common.Hash
+    sourceHash      Hash
     sourceProtected bool
 }
 
@@ -61,7 +57,7 @@ func (hp *HashAndProtected) Bin() []byte {
     } else {
         res = append(res, 0)        
     }
-    if hp.sourceHash != (common.Hash{}) {
+    if hp.sourceHash != (Hash{}) {
         res = append(res, hp.sourceHash[:]...)
         if hp.sourceProtected {
             res = append(res, 1)
@@ -76,7 +72,7 @@ func (hp *HashAndProtected) Bin() []byte {
 type Shorterner struct {
     simpleDB          *SimpleDB
     formulasMappingDB DB
-    formulasMapping   map[common.Hash]HashAndProtected
+    formulasMapping   map[Hash]HashAndProtected
     protected         ProtectedDefinition
 }
 
@@ -95,18 +91,18 @@ func NewShorterner(simpleDB *SimpleDB, kvEngine, kvRoot string, single_instances
 }
 
 func (s *Shorterner) Reset() {
-    s.formulasMapping = make(map[common.Hash]HashAndProtected)
+    s.formulasMapping = make(map[Hash]HashAndProtected)
     initHash := ConstantInitZero.hash
     zeroHash := ConstantZero.hash
     if s.protected.IsProtected(OPInitZero) {
-        s.formulasMapping[initHash] = HashAndProtected{initHash, true, common.Hash{}, false}
+        s.formulasMapping[initHash] = HashAndProtected{initHash, true, Hash{}, false}
     } else {
-        s.formulasMapping[initHash] = HashAndProtected{zeroHash, false, common.Hash{}, false}
+        s.formulasMapping[initHash] = HashAndProtected{zeroHash, false, Hash{}, false}
     }
-    s.formulasMapping[zeroHash] = HashAndProtected{zeroHash, false, common.Hash{}, false}
+    s.formulasMapping[zeroHash] = HashAndProtected{zeroHash, false, Hash{}, false}
 }
 
-func (s *Shorterner) LoadChildHash(parentHash common.Hash) HashAndProtected {
+func (s *Shorterner) LoadChildHash(parentHash Hash) HashAndProtected {
     if child, ok := s.formulasMapping[parentHash]; ok {
         return child
     }
@@ -116,7 +112,7 @@ func (s *Shorterner) LoadChildHash(parentHash common.Hash) HashAndProtected {
     return child
 }
 
-func (s *Shorterner) SaveChildHash(parentHash common.Hash) {
+func (s *Shorterner) SaveChildHash(parentHash Hash) {
     child := s.formulasMapping[parentHash]
     s.formulasMappingDB.Set(parentHash[:], child.Bin())
 }
@@ -128,13 +124,13 @@ func (s *Shorterner) Shortern(parentFormula Formula) {
     protected  := s.protected.IsProtected(parentFormula.opcode)
 
     isSource        := OpcodeIsAddressable(parentFormula.opcode)
-    sourceHash      := common.Hash{}
+    sourceHash      := Hash{}
     sourceProtected := false
 
     for i, hash := range parentFormula.operands {
         child := s.LoadChildHash(hash)
-        if child.sourceHash != (common.Hash{}) {
-            child = HashAndProtected{child.sourceHash, child.sourceProtected, common.Hash{}, false}
+        if child.sourceHash != (Hash{}) {
+            child = HashAndProtected{child.sourceHash, child.sourceProtected, Hash{}, false}
         }
         if isSource {
             if i == 0 {
@@ -150,7 +146,7 @@ func (s *Shorterner) Shortern(parentFormula Formula) {
     }
 
     if protected && parentFormula.opcode == OPConcat {
-        ops := []common.Hash{}
+        ops := []Hash{}
         constData := []byte{}
         for _, op := range formulaOps {
             if op.opcode == OPConstant {
@@ -169,12 +165,12 @@ func (s *Shorterner) Shortern(parentFormula Formula) {
             ops = append(ops, constFormula.hash)
         }
         childFormula := s.simpleDB.FormulaNew(OPConcat, parentFormula.result, ops)
-        s.formulasMapping[parentHash] = HashAndProtected{childFormula.hash, true, common.Hash{}, false}
+        s.formulasMapping[parentHash] = HashAndProtected{childFormula.hash, true, Hash{}, false}
         return
     }
 
     if protected {
-        ops := []common.Hash{}
+        ops := []Hash{}
         for _, op := range formulaOps {
             ops = append(ops, op.hash)
         }
@@ -182,11 +178,11 @@ func (s *Shorterner) Shortern(parentFormula Formula) {
         if isSource {
             s.formulasMapping[parentHash] = HashAndProtected{childFormula.hash, true, sourceHash, sourceProtected}
         } else {
-            s.formulasMapping[parentHash] = HashAndProtected{childFormula.hash, true, common.Hash{}, false}
+            s.formulasMapping[parentHash] = HashAndProtected{childFormula.hash, true, Hash{}, false}
         }
         return
     }
 
     childFormula := s.simpleDB.ConstantNew(OPConstant, parentFormula.result)
-    s.formulasMapping[parentHash] = HashAndProtected{childFormula.hash, false, common.Hash{}, false}
+    s.formulasMapping[parentHash] = HashAndProtected{childFormula.hash, false, Hash{}, false}
 }

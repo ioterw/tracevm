@@ -2,17 +2,15 @@ package dep_tracer
 
 import (
     "math/big"
-
-    "github.com/ethereum/go-ethereum/common"
 )
 
 type PrecompileHandler interface {
-    Register(map[common.Address]PrecompileHandler)
+    Register(map[Address]PrecompileHandler)
     Execute(db *SimpleDB, state *TransactionDB, input, output []byte)
 }
 
-func NewPrecompileHandlers() map[common.Address]PrecompileHandler {
-    handlers := map[common.Address]PrecompileHandler{}
+func NewPrecompileHandlers() map[Address]PrecompileHandler {
+    handlers := map[Address]PrecompileHandler{}
 
     new(ECRecoverHandler).Register(handlers)
     new(SHA256Handler).Register(handlers)
@@ -28,10 +26,17 @@ func NewPrecompileHandlers() map[common.Address]PrecompileHandler {
     return handlers
 }
 
+func addressify(data []byte) Address {
+    val := append(make([]byte, 20-len(data)), data...)
+    var res Address
+    copy(res[:], val)
+    return res
+}
+
 
 type ECRecoverHandler struct {}
-func (ph *ECRecoverHandler) Register(handlers map[common.Address]PrecompileHandler) {
-    handlers[common.BytesToAddress([]byte{0x1})] = ph
+func (ph *ECRecoverHandler) Register(handlers map[Address]PrecompileHandler) {
+    handlers[addressify([]byte{0x1})] = ph
 }
 func (ph *ECRecoverHandler) Execute(db *SimpleDB, state *TransactionDB, input, output []byte) {
     DataPrecompileEcRecover {
@@ -41,8 +46,8 @@ func (ph *ECRecoverHandler) Execute(db *SimpleDB, state *TransactionDB, input, o
 
 
 type SHA256Handler struct {}
-func (ph *SHA256Handler) Register(handlers map[common.Address]PrecompileHandler) {
-    handlers[common.BytesToAddress([]byte{0x2})] = ph
+func (ph *SHA256Handler) Register(handlers map[Address]PrecompileHandler) {
+    handlers[addressify([]byte{0x2})] = ph
 }
 func (ph *SHA256Handler) Execute(db *SimpleDB, state *TransactionDB, input, output []byte) {
     DataPrecompileSha256 {
@@ -52,8 +57,8 @@ func (ph *SHA256Handler) Execute(db *SimpleDB, state *TransactionDB, input, outp
 
 
 type Ripemd160Handler struct {}
-func (ph *Ripemd160Handler) Register(handlers map[common.Address]PrecompileHandler) {
-    handlers[common.BytesToAddress([]byte{0x3})] = ph
+func (ph *Ripemd160Handler) Register(handlers map[Address]PrecompileHandler) {
+    handlers[addressify([]byte{0x3})] = ph
 }
 func (ph *Ripemd160Handler) Execute(db *SimpleDB, state *TransactionDB, input, output []byte) {
     DataPrecompileSha256 {
@@ -63,8 +68,8 @@ func (ph *Ripemd160Handler) Execute(db *SimpleDB, state *TransactionDB, input, o
 
 
 type IdentityHandler struct {}
-func (ph *IdentityHandler) Register(handlers map[common.Address]PrecompileHandler) {
-    handlers[common.BytesToAddress([]byte{0x4})] = ph
+func (ph *IdentityHandler) Register(handlers map[Address]PrecompileHandler) {
+    handlers[addressify([]byte{0x4})] = ph
 }
 func (ph *IdentityHandler) Execute(db *SimpleDB, state *TransactionDB, input, output []byte) {
     DataPrecompileIdentity {
@@ -74,11 +79,21 @@ func (ph *IdentityHandler) Execute(db *SimpleDB, state *TransactionDB, input, ou
 
 
 type ModExpHandler struct {}
-func (ph *ModExpHandler) Register(handlers map[common.Address]PrecompileHandler) {
-    handlers[common.BytesToAddress([]byte{0x5})] = ph
+func (ph *ModExpHandler) Register(handlers map[Address]PrecompileHandler) {
+    handlers[addressify([]byte{0x5})] = ph
 }
 func (ph *ModExpHandler) Execute(db *SimpleDB, state *TransactionDB, input, output []byte) {
-     getData := func(data []byte, start uint64, size uint64) []byte {
+    rightPadBytes := func(slice []byte, l int) []byte {
+        if l <= len(slice) {
+            return slice
+        }
+
+        padded := make([]byte, l)
+        copy(padded, slice)
+
+        return padded
+    }
+    getData := func(data []byte, start uint64, size uint64) []byte {
         length := uint64(len(data))
         if start > length {
             start = length
@@ -87,7 +102,7 @@ func (ph *ModExpHandler) Execute(db *SimpleDB, state *TransactionDB, input, outp
         if end > length {
             end = length
         }
-        return common.RightPadBytes(data[start:end], int(size))
+        return rightPadBytes(data[start:end], int(size))
     }
     var (
         baseLen = new(big.Int).SetBytes(getData(input, 0, 32)).Uint64()
@@ -105,8 +120,8 @@ func (ph *ModExpHandler) Execute(db *SimpleDB, state *TransactionDB, input, outp
 
 
 type EcAddHandler struct {}
-func (ph *EcAddHandler) Register(handlers map[common.Address]PrecompileHandler) {
-    handlers[common.BytesToAddress([]byte{0x6})] = ph
+func (ph *EcAddHandler) Register(handlers map[Address]PrecompileHandler) {
+    handlers[addressify([]byte{0x6})] = ph
 }
 func (ph *EcAddHandler) Execute(db *SimpleDB, state *TransactionDB, input, output []byte) {
     DataPrecompileEcAdd {
@@ -116,8 +131,8 @@ func (ph *EcAddHandler) Execute(db *SimpleDB, state *TransactionDB, input, outpu
 
 
 type EcMulHandler struct {}
-func (ph *EcMulHandler) Register(handlers map[common.Address]PrecompileHandler) {
-    handlers[common.BytesToAddress([]byte{0x7})] = ph
+func (ph *EcMulHandler) Register(handlers map[Address]PrecompileHandler) {
+    handlers[addressify([]byte{0x7})] = ph
 }
 func (ph *EcMulHandler) Execute(db *SimpleDB, state *TransactionDB, input, output []byte) {
     DataPrecompileEcMul {
@@ -127,8 +142,8 @@ func (ph *EcMulHandler) Execute(db *SimpleDB, state *TransactionDB, input, outpu
 
 
 type EcPairingHandler struct {}
-func (ph *EcPairingHandler) Register(handlers map[common.Address]PrecompileHandler) {
-    handlers[common.BytesToAddress([]byte{0x8})] = ph
+func (ph *EcPairingHandler) Register(handlers map[Address]PrecompileHandler) {
+    handlers[addressify([]byte{0x8})] = ph
 }
 func (ph *EcPairingHandler) Execute(db *SimpleDB, state *TransactionDB, input, output []byte) {
     DataPrecompileEcPairing {
@@ -138,8 +153,8 @@ func (ph *EcPairingHandler) Execute(db *SimpleDB, state *TransactionDB, input, o
 
 
 type Blake2FHandler struct {}
-func (ph *Blake2FHandler) Register(handlers map[common.Address]PrecompileHandler) {
-    handlers[common.BytesToAddress([]byte{0x9})] = ph
+func (ph *Blake2FHandler) Register(handlers map[Address]PrecompileHandler) {
+    handlers[addressify([]byte{0x9})] = ph
 }
 func (ph *Blake2FHandler) Execute(db *SimpleDB, state *TransactionDB, input, output []byte) {
     DataPrecompileBlake2F {
@@ -149,8 +164,8 @@ func (ph *Blake2FHandler) Execute(db *SimpleDB, state *TransactionDB, input, out
 
 
 type PointEvaluationHandler struct {}
-func (ph *PointEvaluationHandler) Register(handlers map[common.Address]PrecompileHandler) {
-    handlers[common.BytesToAddress([]byte{0xA})] = ph
+func (ph *PointEvaluationHandler) Register(handlers map[Address]PrecompileHandler) {
+    handlers[addressify([]byte{0xA})] = ph
 }
 func (ph *PointEvaluationHandler) Execute(db *SimpleDB, state *TransactionDB, input, output []byte) {
     DataPointEvaluation {
