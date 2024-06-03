@@ -41,7 +41,7 @@ Additionally, [Geth prerequisites](https://geth.ethereum.org/docs/getting-starte
 It is possible to build TracEVM with such command.
 
 ```bash
-./build.py
+./build.py geth
 ```
 
 ## Running
