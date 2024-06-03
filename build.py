@@ -9,19 +9,23 @@ def popen(*args, **kwargs):
     return res
 
 def main():
-    os.chdir(os.path.dirname(os.path.abspath(__file__)) + '/go-ethereum')
-    for path in glob.glob('../tracer/*'):
-        file_name = path.rsplit('/', 1)[-1]
-        file_path = 'eth/tracers/live/' + file_name
-        shutil.rmtree(file_path, ignore_errors=True)
-        if os.path.isfile(path):
-            shutil.copy(path, file_path)
-        else:
-            shutil.copytree(path, file_path)
+    target = 'geth'
+    
+    if target == 'geth':
+        os.chdir(os.path.dirname(os.path.abspath(__file__)) + '/go-ethereum')
 
-    popen(['go', 'get', 'github.com/basho/riak-go-client'])
-    popen(['make', 'geth'])
-    shutil.copy('build/bin/geth', '..')
+        shutil.rmtree('eth/tracers/live/dep_tracer',  ignore_errors=True)
+        shutil.rmtree('eth/tracers/live/dep_geth.go', ignore_errors=True)
+
+        shutil.copytree('../tracer/dep_tracer', 'eth/tracers/live/dep_tracer')
+        shutil.copy('../tracer/dep_geth.go', 'eth/tracers/live/dep_geth.go')
+
+        popen(['go', 'get', 'github.com/basho/riak-go-client'])
+        popen(['make', 'geth'])
+        shutil.copy('build/bin/geth', '..')
+    else:
+        print('Unknown target:', target)
+        exit(1)
 
     os.chdir('..')
     shutil.rmtree('build', ignore_errors=True)
