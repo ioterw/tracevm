@@ -23,17 +23,17 @@ def main():
         popen(['go', 'get', 'github.com/basho/riak-go-client'])
         popen(['make', 'geth'])
         shutil.copy('build/bin/geth', '..')
+
+        os.chdir('..')
+        shutil.rmtree('build', ignore_errors=True)
+        os.mkdir('build')
+        shutil.copy('run.py', 'build')
+        shutil.copy('geth', 'build')
+        shutil.copy('conf_examples/default.json', 'conf.json')
+        shutil.copy('conf.json', 'build')
     else:
         print('Unknown target:', target)
         exit(1)
-
-    os.chdir('..')
-    shutil.rmtree('build', ignore_errors=True)
-    os.mkdir('build')
-    shutil.copy('run.py', 'build')
-    shutil.copy('geth', 'build')
-    shutil.copy('conf_examples/default.json', 'conf.json')
-    shutil.copy('conf.json', 'build')
 
 if __name__ == '__main__':
     main()
