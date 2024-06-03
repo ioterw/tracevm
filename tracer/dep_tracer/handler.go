@@ -99,8 +99,8 @@ type StateDB interface {
 }
 
 func (handler *DepHandler) StartTransactionRecording(
-    isCreate bool, addr common.Address, input []byte, block *big.Int,
-    timestamp uint64, origin common.Address, txHash common.Hash,
+    isCreate bool, addr [20]byte, input []byte, block *big.Int,
+    timestamp uint64, origin [20]byte, txHash [32]byte,
     code []byte, isSelfdestruct6780, isRandom bool, stateDB StateDB,
 ) {
     if handler.activated {
@@ -135,7 +135,7 @@ func (handler *DepHandler) EndTransactionRecording() {
 }
 
 func (handler *DepHandler) HandleOpcode(
-    stack []uint256.Int, memory []byte, addr common.Address,
+    stack []uint256.Int, memory []byte, addr [20]byte,
     pc uint64, op byte, isInvalid bool, hasError bool,
 ) {
     if !handler.activated {
@@ -194,7 +194,7 @@ func (handler *DepHandler) HandleOpcode(
     }
 }
 
-func (handler *DepHandler) HandleEnter(to common.Address, input []byte) {
+func (handler *DepHandler) HandleEnter(to [20]byte, input []byte) {
     if !handler.activated {
         panic("HandleEnter is not activated")
     }
