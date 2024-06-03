@@ -2,8 +2,6 @@ package dep_tracer
 
 import (
     "github.com/holiman/uint256"
-
-    "github.com/ethereum/go-ethereum/crypto"
 )
 
 const (
@@ -1485,7 +1483,7 @@ func (oh *CreateHandler) Register(handlers map[byte]OPHandler) {
     handlers[byte(CREATE)] = oh
 }
 func (oh *CreateHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
-    newAddr := [20]byte(crypto.CreateAddress([20]byte(addr), stateDB.GetNonce([20]byte(addr))))
+    newAddr := CreateAddress(addr, stateDB.GetNonce(addr))
     
     offset := stack[stackSize-2].Uint64()
     size := stack[stackSize-3].Uint64()
@@ -1542,8 +1540,8 @@ func (oh *Create2Handler) Before(db *SimpleDB, state *TransactionDB, stack []uin
     }
 
     salt := stack[stackSize-4]
-    newAddr := [20]byte(crypto.CreateAddress2([20]byte(addr), salt.Bytes32(), crypto.Keccak256Hash(result).Bytes()))
-    
+    newAddr := CreateAddress2(addr, salt.Bytes32(), Keccak256(result))
+
     DataCreate2Start {
         Address: newAddr,
         Offset: offset,
