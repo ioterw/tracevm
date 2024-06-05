@@ -127,6 +127,9 @@ func StartTransactionRecording(
 
 //export EndTransactionRecording
 func EndTransactionRecording() {
+    if !cTracing {
+        return
+    }
     cTracing = false
     cDepHandler.EndTransactionRecording()
 }
