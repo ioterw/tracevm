@@ -43,6 +43,7 @@ import (
 var getNoncePointer C.get_nonce_function = nil
 var getCodePointer  C.get_code_function  = nil
 var cDepHandler     *DepHandler          = nil
+var cTracing        bool                 = false
 
 
 //export RegisterGetNonce
@@ -114,6 +115,7 @@ func StartTransactionRecording(
     timestamp uint64, origin C.Address, txHash C.Hash,
     code C.SizedArray, isSelfdestruct6780, isRandom bool,
 ) {
+    cTracing = true
     block0 := new(big.Int)
     block0.SetUint64(block)
     cDepHandler.StartTransactionRecording(
@@ -125,6 +127,7 @@ func StartTransactionRecording(
 
 //export EndTransactionRecording
 func EndTransactionRecording() {
+    cTracing = false
     cDepHandler.EndTransactionRecording()
 }
 
@@ -133,6 +136,9 @@ func HandleOpcode(
     stack C.Stack, memory C.SizedArray, addr C.Address,
     pc uint64, op byte, isInvalid bool, hasError bool,
 ) {
+    if !cTracing {
+        return
+    }
     cDepHandler.HandleOpcode(
         unpackStack(stack), unpackSizedArray(memory), unpackAddress(addr),
         pc, op, isInvalid, hasError,
@@ -141,6 +147,9 @@ func HandleOpcode(
 
 //export HandleEnter
 func HandleEnter(to C.Address, input C.SizedArray) {
+    if !cTracing {
+        return
+    }
     cDepHandler.HandleEnter(
         unpackAddress(to), unpackSizedArray(input),
     )
@@ -148,10 +157,16 @@ func HandleEnter(to C.Address, input C.SizedArray) {
 
 //export HandleFault
 func HandleFault(op byte) {
+    if !cTracing {
+        return
+    }
     cDepHandler.HandleFault(op)
 }
 
 //export HandleExit
 func HandleExit(output C.SizedArray, hasError bool) {
+    if !cTracing {
+        return
+    }
     cDepHandler.HandleExit(unpackSizedArray(output), hasError)
 }
