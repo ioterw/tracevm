@@ -1,4 +1,4 @@
-package dep_tracer
+package main
 
 /*
 #include <stdint.h>
@@ -37,13 +37,16 @@ import (
     "unsafe"
     "math/big"
     "github.com/holiman/uint256"
+
+    "dep_tracer/dep_tracer"
 )
 
+func main() {}
 
-var getNoncePointer C.get_nonce_function = nil
-var getCodePointer  C.get_code_function  = nil
-var cDepHandler     *DepHandler          = nil
-var cTracing        bool                 = false
+var getNoncePointer C.get_nonce_function   = nil
+var getCodePointer  C.get_code_function    = nil
+var cDepHandler     *dep_tracer.DepHandler = nil
+var cTracing        bool                   = false
 
 
 //export RegisterGetNonce
@@ -55,22 +58,22 @@ func RegisterGetCode(pointer C.get_code_function) {
    getCodePointer = pointer
 }
 
-func packAddress(addr Address) C.Address {
+func packAddress(addr dep_tracer.Address) C.Address {
     res := C.Address{}
     for i := 0; i < 20; i ++ {
         res.data[i] = C.uchar(addr[i])
     }
     return res
 }
-func unpackAddress(addr C.Address) Address {
-    res := Address {}
+func unpackAddress(addr C.Address) dep_tracer.Address {
+    res := dep_tracer.Address {}
     for i := 0; i < 20; i ++ {
         res[i] = byte(addr.data[i])
     }
     return res
 }
-func unpackHash(hash C.Hash) Hash {
-    res := Hash {}
+func unpackHash(hash C.Hash) dep_tracer.Hash {
+    res := dep_tracer.Hash {}
     for i := 0; i < 32; i ++ {
         res[i] = byte(hash.data[i])
     }
@@ -106,7 +109,7 @@ func InitDep(cfg *C.char) {
     if cDepHandler != nil {
         panic("InitDep called twice")
     }
-    cDepHandler = NewDepHandler([]byte(C.GoString(cfg)))
+    cDepHandler = dep_tracer.NewDepHandler([]byte(C.GoString(cfg)))
 }
 
 //export StartTransactionRecording
