@@ -73,7 +73,7 @@ fn get_code(_addr: Address) -> SizedArray {
     }
 }
 
-fn on_enter<EvmContext,CallInputs>(data: &mut DepData, _ecx: &mut EvmContext, _inputs: &mut CallInputs, _is_create: bool) {
+fn on_enter<EvmContext,Inputs>(data: &mut DepData, _ecx: &mut EvmContext, _inputs: &mut Inputs, _is_create: bool) {
     println!("HI enter");
 
     if data.call_depth == 0 {
