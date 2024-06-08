@@ -73,7 +73,7 @@ extern "C" {
     );
     fn HandleEnter(to: CAddress, input: CSizedArray);
     fn HandleExit(output: CSizedArray, hasError: bool);
-    // fn HandleFault(op: u8);
+    fn HandleFault(op: u8);
 }
 
 #[derive(Clone, Debug)]
@@ -274,6 +274,14 @@ pub(crate) fn dep_step<DB:DatabaseExt>(_data: &mut DepData, interp: &mut Interpr
             is_invalid,
             context.inner.error.is_err(),
         );
+    }
+}
+
+pub(crate) fn dep_step_end<DB:DatabaseExt>(_data: &mut DepData, interp: &mut Interpreter, context: &mut EvmContext<DB>) {
+    if context.inner.error.is_err() {
+        unsafe {
+            HandleFault(interp.current_opcode())
+        }
     }
 }
 

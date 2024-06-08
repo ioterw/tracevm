@@ -109,6 +109,10 @@ def build_foundry(root):
         r'\n    fn step\(\s*&mut self\,\s*interp\: &mut Interpreter\,\s*ecx\: &mut EvmContext<DB>\,?\s*\)\s*\{\n',
         (
             '\n'
+            '    fn step_end(&mut self, interp: &mut Interpreter, ecx: &mut EvmContext<DB>) {\n'
+            '        dep_tracer::dep_step_end(&mut self.dep_data, interp, ecx);\n'
+            '    }\n'
+            '\n'
             '    fn step(&mut self, interp: &mut Interpreter, ecx: &mut EvmContext<DB>) {\n'
             '        dep_tracer::dep_step(&mut self.dep_data, interp, ecx);\n'
         ),
