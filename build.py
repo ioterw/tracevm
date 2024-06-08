@@ -152,7 +152,7 @@ def build_foundry(root):
 
     env = os.environ.copy()
     env['DEP_PATH'] = f'{root}/build'
-    env['RUSTFLAGS'] = f'-Clink-args=-Wl,-rpath={env["DEP_PATH"]}'
+    env['RUSTFLAGS'] = f'-Clink-args=-Wl,-rpath,{env["DEP_PATH"]}'
     popen(['cargo', 'build'], env=env)
 
 def main(target):
