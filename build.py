@@ -82,7 +82,7 @@ def build_foundry(root):
     patch_file(
         'Cargo.toml',
         r'rust\-version \= "1\.76"',
-        'rust-version = "1.77"',
+        'rust-version = "1.77.0"',
     )
 
     reset_file('crates/evm/evm/src/inspectors/debugger.rs')
