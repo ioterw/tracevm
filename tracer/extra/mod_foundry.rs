@@ -1,4 +1,4 @@
-use std::ffi::CString;
+use std::{ env, ffi::CString };
 use revm::{
     EvmContext,
     interpreter::{ Interpreter, OpCode, CallInputs, CallOutcome, CreateInputs, CreateOutcome, InterpreterResult },
@@ -82,28 +82,38 @@ pub(crate) struct DepData {
 }
 impl Default for DepData {
     fn default() -> DepData {
-        let cfg = CString::new(
-            "{
-                \"kv\": {\"engine\": \"amnesia\", \"root\": \"\"}, 
-                \"logger\": {
-                    \"opcodes_short\": [\"e0\", \"e1\"],
-                    \"opcodes\": [],
-                    \"final_slots_short\": true,
-                    \"final_slots\": false,
-                    \"codes_short\": false,
-                    \"codes\": false,
-                    \"return_data_short\": false,
-                    \"return_data\": false,
-                    \"logs_short\": false,
-                    \"logs\": false,
-                    \"sol_view\": true
-                },
-                \"output\": \"http://0.0.0.0:4334\",
-                \"past_unknown\": true
-            }"
-        ).expect("CString::new failed");
+        match env::var("DEP_CONFIG") {
+            Ok(val) => {
+                let cfg = CString::new(val).expect("CString::new failed");
+                unsafe {
+                    InitDep(cfg.as_ptr());
+                }
+            },
+            Err(_) => {
+                let cfg = CString::new("{
+                    \"kv\": {\"engine\": \"amnesia\", \"root\": \"\"}, 
+                    \"logger\": {
+                        \"opcodes_short\": [\"e0\", \"e1\"],
+                        \"opcodes\": [],
+                        \"final_slots_short\": true,
+                        \"final_slots\": false,
+                        \"codes_short\": false,
+                        \"codes\": false,
+                        \"return_data_short\": false,
+                        \"return_data\": false,
+                        \"logs_short\": false,
+                        \"logs\": false,
+                        \"sol_view\": true
+                    },
+                    \"output\": \"http://0.0.0.0:4334\",
+                    \"past_unknown\": true
+                }").expect("CString::new failed");
+                unsafe {
+                    InitDep(cfg.as_ptr());
+                }
+            },
+        };
         unsafe {
-            InitDep(cfg.as_ptr());
             RegisterGetNonce(get_nonce);
             RegisterGetCode(get_code);
         }
