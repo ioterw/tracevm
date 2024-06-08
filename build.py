@@ -63,7 +63,9 @@ def build_lib(root):
     rmfile('../build/libdep.a')
     rmfile('../build/libdep.h')
 
-    popen(['go', 'build', '-buildmode=c-archive', 'libdep.go'])
+    env = os.environ.copy()
+    env['CGO_ENABLED'] = '1'
+    popen(['go', 'build', '-buildmode=c-archive', 'libdep.go'], env=env)
     shutil.move('libdep.a', '../build')
     shutil.move('libdep.h', '../build')
 
