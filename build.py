@@ -126,7 +126,7 @@ def build_foundry(root):
         (
             '\n'
             '    fn call_end( &mut self, _context: &mut EvmContext<DB>, _inputs: &CallInputs, outcome: CallOutcome) -> CallOutcome {\n'
-            '        dep_tracer::dep_call_end(&mut self.dep_data, _context, _inputs);\n'
+            '        dep_tracer::dep_call_end(&mut self.dep_data, _context, _inputs, &outcome);\n'
         ),
     )
     patch_file(
@@ -144,7 +144,7 @@ def build_foundry(root):
         (
             '\n'
             '    fn create_end( &mut self, _context: &mut EvmContext<DB>, _inputs: &CreateInputs, outcome: CreateOutcome) -> CreateOutcome {\n'
-            '        dep_tracer::dep_create_end(&mut self.dep_data, _context, _inputs);\n'
+            '        dep_tracer::dep_create_end(&mut self.dep_data, _context, _inputs, &outcome);\n'
         ),
     )
 

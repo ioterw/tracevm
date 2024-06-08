@@ -100,7 +100,7 @@ func (s StateDBC) GetNonce(addr [20]byte) uint64 {
     return uint64(res)
 }
 func (s StateDBC) GetCode(addr [20]byte) []byte {
-    res := C.get_code_bridge(getNoncePointer, packAddress(addr))
+    res := C.get_code_bridge(getCodePointer, packAddress(addr))
     return unpackSizedArray(res)
 }
 
