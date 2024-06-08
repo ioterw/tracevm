@@ -2,7 +2,7 @@ use std::{ env, ffi::CString };
 use revm::{
     EvmContext,
     interpreter::{ Interpreter, OpCode, CallInputs, CallOutcome, CreateInputs, CreateOutcome, InterpreterResult },
-    primitives::{ TransactTo, SpecId },
+    primitives::{ SpecId },
 };
 use foundry_evm_core::{ backend::DatabaseExt };
 use alloy_primitives::{ address, Address, Bytes, U256 };
@@ -155,18 +155,10 @@ static mut GET_CODE_ADDRESS: Address = ZERO_ADDRESS;
 static mut GET_CODE_DATA:    Bytes   = Bytes::new();
 
 
-fn on_enter<DB:DatabaseExt>(data: &mut DepData, context: &mut EvmContext<DB>, is_create: bool, input: &Bytes) {
-    let addr: Address;
-    let origin = context.inner.env.tx.caller;
-    if is_create {
-        addr = origin.create(context.inner.env.tx.nonce.expect("nonce is missing"));
-    } else {
-        let TransactTo::Call(tmp_addr) = context.inner.env.tx.transact_to else { panic!("impossible create") };
-        addr = tmp_addr;
-    }
-
+fn on_enter<DB:DatabaseExt>(data: &mut DepData, context: &mut EvmContext<DB>, is_create: bool, input: &Bytes, addr: Address) {
     if data.call_depth == 0 {
         let input = context.inner.env.tx.data.clone();
+        let origin = context.inner.env.tx.caller;
         let code: Bytes;
         if is_create {
             code = Bytes::new()
@@ -205,7 +197,7 @@ fn on_enter<DB:DatabaseExt>(data: &mut DepData, context: &mut EvmContext<DB>, is
     data.call_depth += 1;
 }
 
-fn on_exit<DB:DatabaseExt>(data: &mut DepData, _context: &mut EvmContext<DB>, result: &InterpreterResult) {
+fn on_exit<DB:DatabaseExt>(data: &mut DepData, context: &mut EvmContext<DB>, result: &InterpreterResult) {
     data.call_depth -= 1;
 
     if data.call_depth == 0 {
@@ -217,7 +209,7 @@ fn on_exit<DB:DatabaseExt>(data: &mut DepData, _context: &mut EvmContext<DB>, re
             // interp.return_data_buffer
             HandleExit(
                 bytes_to_csizedarray(&result.output),
-                false,
+                context.inner.error.is_err(),
             )
         }
     }
@@ -256,8 +248,7 @@ pub(crate) fn dep_step<DB:DatabaseExt>(_data: &mut DepData, interp: &mut Interpr
             },
             OpCode::CREATE => {
                 let address = interp.contract.target_address;
-                let account = context.inner.journaled_state.state.get(&address).unwrap();
-                let nonce = account.info.nonce;
+                let nonce = context.journaled_state.account(address).info.nonce;
 
                 unsafe {
                     GET_NONCE_ADDRESS = address;
@@ -287,7 +278,7 @@ pub(crate) fn dep_step<DB:DatabaseExt>(_data: &mut DepData, interp: &mut Interpr
 }
 
 pub(crate) fn dep_call<DB:DatabaseExt>(data: &mut DepData, context: &mut EvmContext<DB>, inputs: &mut CallInputs) {
-    on_enter(data, context, false, &inputs.input)
+    on_enter(data, context, false, &inputs.input, inputs.target_address)
 }
 
 pub(crate) fn dep_call_end<DB:DatabaseExt>(data: &mut DepData, context: &mut EvmContext<DB>, _inputs: &CallInputs, outcome: &CallOutcome) {
@@ -295,7 +286,8 @@ pub(crate) fn dep_call_end<DB:DatabaseExt>(data: &mut DepData, context: &mut Evm
 }
 
 pub(crate) fn dep_create<DB:DatabaseExt>(data: &mut DepData, context: &mut EvmContext<DB>, inputs: &mut CreateInputs) {
-    on_enter(data, context, true, &inputs.init_code)
+    let addr = inputs.created_address(context.journaled_state.account(inputs.caller).info.nonce);
+    on_enter(data, context, true, &inputs.init_code, addr)
 }
 
 pub(crate) fn dep_create_end<DB:DatabaseExt>(data: &mut DepData, context: &mut EvmContext<DB>, _inputs: &CreateInputs, outcome: &CreateOutcome) {
