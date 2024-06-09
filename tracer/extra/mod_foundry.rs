@@ -201,7 +201,6 @@ fn on_exit<DB:DatabaseExt>(data: &mut DepData, context: &mut EvmContext<DB>, res
     data.call_depth -= 1;
 
     unsafe {
-        // interp.return_data_buffer
         HandleExit(
             bytes_to_csizedarray(&result.output),
             context.inner.error.is_err(),

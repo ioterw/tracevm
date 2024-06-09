@@ -159,6 +159,9 @@ def build_foundry(root):
     env['RUSTFLAGS'] = f'-Clink-args=-Wl,-rpath,{env["DEP_PATH"]}'
     popen(['cargo', 'build'], env=env)
 
+    shutil.copy('target/debug/cast', '../build/tracevm-cast')
+    shutil.copy('target/debug/forge', '../build/tracevm-forge')
+
 def main(target):
     root = os.path.dirname(os.path.abspath(__file__))
     if target == 'geth':
