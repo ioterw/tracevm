@@ -1,7 +1,7 @@
 FROM python:3.12-slim
 
-COPY ./run.py /root
-COPY ./geth /root
+COPY ./build/run.py /root
+COPY ./build/geth /root
 
 WORKDIR /root
 

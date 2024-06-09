@@ -1,0 +1,9 @@
+FROM archlinux:latest
+
+COPY ./build/tracevm-cast /root
+RUN chmod +x /root/tracevm-cast
+
+WORKDIR /root
+
+ENTRYPOINT ["/root/tracevm-cast"]
+CMD []
