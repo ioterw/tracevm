@@ -138,6 +138,27 @@ List of TracEVM opcodes can be found [here](tracer/dep_tracer/opcodes_backend.go
 
 Other conf examples can be found [here](conf_examples)
 
+## Foundry prerequesites
+
+`make`, `git`, `go`, `python3`, `rust`, `gcc` (`clang` on mac should be fine) should be preinstalled.
+
+## Building Foundry
+
+It is possible to build TracEVM for Foundry with such command.
+
+```bash
+./build.py foundry
+```
+
+## Running
+
+To open webview for specific transaction on address [127.0.0.1:4334](http://127.0.0.1:4334) run the following command.
+
+```bash
+cd build
+./tracevm-cast run 0xf717d3585675a6453e7b433692d3d951d24a41c7c0a7d04d1ce114f2db3e036d --flashbots --debug
+```
+
 ## Found a bug?
 
 Please open an [issue](https://github.com/ioterw/tracevm/issues) and supply solidity code that produced unexpected behaviour.
