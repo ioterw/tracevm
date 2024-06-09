@@ -32,7 +32,7 @@ cd tracevm
 git submodule update --init
 ```
 
-Also, `make`, `go` and `python3` should be preinstalled.
+Also, `make`, `git`, `go` and `python3` should be preinstalled.
 
 Additionally, [Geth prerequisites](https://geth.ethereum.org/docs/getting-started/installing-geth#build-from-source) are required to compile Geth.
 
