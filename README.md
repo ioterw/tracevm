@@ -138,6 +138,20 @@ List of TracEVM opcodes can be found [here](tracer/dep_tracer/opcodes_backend.go
 
 Other conf examples can be found [here](conf_examples)
 
+## Foundry Docker
+
+Still the easiest way to start foundry is to use [Docker](https://hub.docker.com/r/ioterw/tracevm-cast)
+
+```bash
+docker pull ioterw/tracevm-cast
+```
+
+Run cast
+
+```bash
+docker run --rm -it -p 4334:4334 ioterw/tracevm-cast run 0xf717d3585675a6453e7b433692d3d951d24a41c7c0a7d04d1ce114f2db3e036d --flashbots --debug
+```
+
 ## Foundry prerequesites
 
 `make`, `git`, `go`, `python3`, `rust`, `gcc` (`clang` on mac should be fine) should be preinstalled.
@@ -150,7 +164,7 @@ It is possible to build TracEVM for Foundry with such command.
 ./build.py foundry
 ```
 
-## Running
+## Running Foundry Cast
 
 To open webview for specific transaction on address [127.0.0.1:4334](http://127.0.0.1:4334) run the following command.
 
