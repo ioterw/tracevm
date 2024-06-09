@@ -85,6 +85,37 @@ def build_foundry(root):
         'rust-version = "1.77.0"',
     )
 
+    reset_file('crates/cast/bin/cmd/run.rs')
+    patch_file(
+        'crates/cast/bin/cmd/run.rs',
+        r'use alloy_primitives::U256;\n',
+        (
+            'use foundry_evm::inspectors::debugger::dep_tracer;\n'
+            'use alloy_primitives::U256;\n'
+        ),
+    )
+    patch_file(
+        'crates/cast/bin/cmd/run.rs',
+        r'\n        let result \= \{\n',
+        (
+            '\n'
+            '        dep_tracer::activate(tx.hash);\n'
+            '        let result = {\n'
+        ),
+    )
+
+
+
+    reset_file('crates/evm/evm/src/inspectors/mod.rs')
+    patch_file(
+        'crates/evm/evm/src/inspectors/mod.rs',
+        r'\nmod debugger;\n',
+        (
+            '\n'
+            'pub mod debugger;\n'
+        ),
+    )
+
     reset_file('crates/evm/evm/src/inspectors/debugger.rs')
     patch_file(
         'crates/evm/evm/src/inspectors/debugger.rs',
@@ -101,7 +132,7 @@ def build_foundry(root):
         (
             '\n'
             'use revm_inspectors::tracing::types::CallKind;\n'
-            'mod dep_tracer;\n'
+            'pub mod dep_tracer;\n'
         ),
     )
     patch_file(
@@ -160,7 +191,6 @@ def build_foundry(root):
     popen(['cargo', 'build'], env=env)
 
     shutil.copy('target/debug/cast', '../build/tracevm-cast')
-    shutil.copy('target/debug/forge', '../build/tracevm-forge')
 
 def main(target):
     root = os.path.dirname(os.path.abspath(__file__))

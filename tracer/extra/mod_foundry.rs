@@ -5,7 +5,7 @@ use revm::{
     primitives::{ SpecId },
 };
 use foundry_evm_core::{ backend::DatabaseExt };
-use alloy_primitives::{ address, Address, Bytes, U256 };
+use alloy_primitives::{ address, Address, Bytes, U256, FixedBytes };
 
 #[repr(C)]
 struct CAddress {
@@ -155,7 +155,28 @@ static mut GET_CODE_ADDRESS: Address = ZERO_ADDRESS;
 static mut GET_CODE_DATA:    Bytes   = Bytes::new();
 
 
+static mut ACTIVATED_HASH: FixedBytes<32> = FixedBytes::ZERO;
+fn is_activated() -> bool {
+    unsafe {
+        return ACTIVATED_HASH != FixedBytes::ZERO;
+    }
+}
+pub fn activate(hash: FixedBytes<32>) {
+    unsafe {
+        ACTIVATED_HASH = hash;
+    }
+}
+pub fn deactivate() {
+    unsafe {
+        ACTIVATED_HASH = FixedBytes::ZERO;
+    }
+}
+
 fn on_enter<DB:DatabaseExt>(data: &mut DepData, context: &mut EvmContext<DB>, is_create: bool, input: &Bytes, addr: Address) {
+    if !is_activated() {
+        return;
+    }
+
     if data.call_depth == 0 {
         let input = context.inner.env.tx.data.clone();
         let origin = context.inner.env.tx.caller;
@@ -179,7 +200,7 @@ fn on_enter<DB:DatabaseExt>(data: &mut DepData, context: &mut EvmContext<DB>, is
                 block.to::<u64>(),
                 timestamp.to::<u64>(),
                 address_to_caddress(origin),
-                deadbeef_chash(),
+                CHash{ data: *ACTIVATED_HASH },
                 bytes_to_csizedarray(&code),
                 is_selfdestruct6780,
                 is_random,
@@ -198,6 +219,10 @@ fn on_enter<DB:DatabaseExt>(data: &mut DepData, context: &mut EvmContext<DB>, is
 }
 
 fn on_exit<DB:DatabaseExt>(data: &mut DepData, context: &mut EvmContext<DB>, result: &InterpreterResult) {
+    if !is_activated() {
+        return;
+    }
+
     data.call_depth -= 1;
 
     unsafe {
@@ -215,6 +240,10 @@ fn on_exit<DB:DatabaseExt>(data: &mut DepData, context: &mut EvmContext<DB>, res
 }
 
 pub(crate) fn dep_step<DB:DatabaseExt>(_data: &mut DepData, interp: &mut Interpreter, context: &mut EvmContext<DB>) {
+    if !is_activated() {
+        return;
+    }
+
     let is_invalid: bool;
     if let Some(op) = OpCode::new(interp.current_opcode()) {
         is_invalid = false;
@@ -277,6 +306,10 @@ pub(crate) fn dep_step<DB:DatabaseExt>(_data: &mut DepData, interp: &mut Interpr
 }
 
 pub(crate) fn dep_step_end<DB:DatabaseExt>(_data: &mut DepData, interp: &mut Interpreter, context: &mut EvmContext<DB>) {
+    if !is_activated() {
+        return;
+    }
+
     if context.inner.error.is_err() {
         unsafe {
             HandleFault(interp.current_opcode())
