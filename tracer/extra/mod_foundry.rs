@@ -185,13 +185,13 @@ fn on_enter<DB:DatabaseExt>(data: &mut DepData, context: &mut EvmContext<DB>, is
                 is_random,
             );
         }
-    } else {
-        unsafe {
-            HandleEnter(
-                address_to_caddress(addr),
-                bytes_to_csizedarray(&input),
-            )
-        }
+    }
+
+    unsafe {
+        HandleEnter(
+            address_to_caddress(addr),
+            bytes_to_csizedarray(&input),
+        )
     }
 
     data.call_depth += 1;
@@ -200,17 +200,17 @@ fn on_enter<DB:DatabaseExt>(data: &mut DepData, context: &mut EvmContext<DB>, is
 fn on_exit<DB:DatabaseExt>(data: &mut DepData, context: &mut EvmContext<DB>, result: &InterpreterResult) {
     data.call_depth -= 1;
 
+    unsafe {
+        // interp.return_data_buffer
+        HandleExit(
+            bytes_to_csizedarray(&result.output),
+            context.inner.error.is_err(),
+        )
+    }
+
     if data.call_depth == 0 {
         unsafe {
             EndTransactionRecording();
-        }
-    } else {
-        unsafe {
-            // interp.return_data_buffer
-            HandleExit(
-                bytes_to_csizedarray(&result.output),
-                context.inner.error.is_err(),
-            )
         }
     }
 }
@@ -263,7 +263,7 @@ pub(crate) fn dep_step<DB:DatabaseExt>(_data: &mut DepData, interp: &mut Interpr
 
     let mut mem_copy = vec![0; interp.shared_memory.len()];
     mem_copy.clone_from_slice(interp.shared_memory.context_memory());
-    
+
     unsafe {
         HandleOpcode(
             stack_to_cstack(interp.stack.data()),
