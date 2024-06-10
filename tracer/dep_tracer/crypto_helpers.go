@@ -41,7 +41,7 @@ func CreateAddress2(b Address, salt Hash, inithash []byte) Address {
 }
 
 func bytesToAddress(b []byte) Address {
-    setBytes := func(a Address, b []byte) {
+    setBytes := func(a *Address, b []byte) {
         if len(b) > len(a) {
             b = b[len(b)-20:]
         }
@@ -49,7 +49,7 @@ func bytesToAddress(b []byte) Address {
     }
 
     var a Address
-    setBytes(a, b)
+    setBytes(&a, b)
     return a
 }
 

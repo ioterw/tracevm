@@ -198,7 +198,7 @@ func (l *Logger) logFormulas(
     addr Address, addrVersion uint64,
     codeAddr Address,
     outputFormulas map[string][]Formula,
-) { 
+) {
     type MessageJSON struct {
         EventType      string `json:"event_type"`
         ShortTypes     map[string][]string `json:"short_types"`
