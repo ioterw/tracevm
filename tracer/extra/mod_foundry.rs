@@ -176,7 +176,6 @@ fn on_enter<DB:DatabaseExt>(data: &mut DepData, context: &mut EvmContext<DB>, is
     if !is_activated() {
         return;
     }
-    println!("on_enter");
 
     if data.call_depth == 0 {
         let input = context.inner.env.tx.data.clone();
