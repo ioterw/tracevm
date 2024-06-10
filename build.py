@@ -188,7 +188,9 @@ def build_foundry(root):
     env = os.environ.copy()
     env['DEP_PATH'] = f'{root}/build'
     env['RUSTFLAGS'] = f'-Clink-args=-Wl,-rpath,{env["DEP_PATH"]}'
+    os.chdir('crates/cast')
     popen(['cargo', 'build'], env=env)
+    os.chdir('../..')
 
     shutil.copy('target/debug/cast', '../build/tracevm-cast')
 
