@@ -21,7 +21,7 @@ func (po *ProtectedDefinition) IsProtected(op uint8) bool {
 }
 
 func CryptoProtectedDefinition() ProtectedDefinition {
-    opcodes := []uint8{OPSLoad, OPSStore, OPKeccak, OPCodeKeccak}
+    opcodes := []uint8{OPSLoad, OPSStore, OPTLoad, OPTStore, OPKeccak, OPCodeKeccak}
     opcodes = append(opcodes, OPEcRecover, OPSha256, OPRipemd160, OPModExp, OPEcAddX)
     opcodes = append(opcodes, OPEcAddY, OPEcMulX, OPEcMulY, OPEcPairing, OPBlake2F)
     return NewProtectedDefinition("crypto", opcodes)

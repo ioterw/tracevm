@@ -553,6 +553,7 @@ func (oh *TLoadHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint2
     return DIRECTION_NONE
 }
 func (oh *TLoadHandler) After(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) {
+    oh.data.Value = stack[stackSize-1]
     oh.data.Handle(db, state)
 }
 func (oh *TLoadHandler) Exit(db *SimpleDB, state *TransactionDB, success bool) {}
@@ -567,6 +568,7 @@ func (oh *TStoreHandler) Register(handlers map[byte]OPHandler) {
 func (oh *TStoreHandler) Before(db *SimpleDB, state *TransactionDB, stack []uint256.Int, stackSize int, stateDB StateDB, isSelfdestruct6780 bool, isRandom bool, pc uint64, op byte, addr Address, memory []byte) int {
     oh.data = DataTStore {
         Slot: stack[stackSize-1],
+        Value: stack[stackSize-2],
     }
     return DIRECTION_NONE
 }

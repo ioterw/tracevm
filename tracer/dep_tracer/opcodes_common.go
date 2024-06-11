@@ -76,6 +76,8 @@ var OpcodeToString = map[uint8]string{
 
     OPSLoad:  "SLOAD",
     OPSStore: "SSTORE",
+    OPTLoad:  "TLOAD",
+    OPTStore: "TSTORE",
 }
 
 func OpcodeIsConstant(opcode uint8) bool {

@@ -79,4 +79,6 @@ const (
     // Addressable (1st - value, 2nd - address) / when used as operand - shortened to value
     OPSLoad  uint8 = 0xE0
     OPSStore uint8 = 0xE1
+    OPTLoad  uint8 = 0xE2
+    OPTStore uint8 = 0xE3
 )

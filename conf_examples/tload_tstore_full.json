@@ -4,16 +4,16 @@
         "root": ""
     },
     "logger": {
-        "opcodes_short": ["e0", "e1", "e2", "e3"],
-        "opcodes": [],
-        "final_slots_short": true,
-        "final_slots": true,
+        "opcodes_short": ["e2", "e3"],
+        "opcodes": ["e2", "e3"],
+        "final_slots_short": false,
+        "final_slots": false,
         "codes_short": false,
         "codes": false,
         "return_data_short": false,
-        "return_data": true,
+        "return_data": false,
         "logs_short": false,
-        "logs": true,
+        "logs": false,
         "sol_view": true
     },
     "output": "http://0.0.0.0:4334",

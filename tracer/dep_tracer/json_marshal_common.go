@@ -95,10 +95,12 @@ type DataSStore struct {
 
 type DataTLoad struct {
     Slot  uint256.Int `json:"slot"`
+    Value uint256.Int `json:"value"`
 }
 
 type DataTStore struct {
     Slot  uint256.Int `json:"slot"`
+    Value uint256.Int `json:"value"`
 }
 
 type DataOne struct {

@@ -93,7 +93,7 @@ impl Default for DepData {
                 let cfg = CString::new("{
                     \"kv\": {\"engine\": \"amnesia\", \"root\": \"\"}, 
                     \"logger\": {
-                        \"opcodes_short\": [\"e0\", \"e1\"],
+                        \"opcodes_short\": [\"e0\", \"e1\", \"e2\", \"e3\"],
                         \"opcodes\": [],
                         \"final_slots_short\": true,
                         \"final_slots\": false,

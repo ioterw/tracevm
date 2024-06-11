@@ -139,14 +139,27 @@ func (data DataSStore) Handle(db *SimpleDB, state *TransactionDB) {
 }
 
 func (data DataTLoad) Handle(db *SimpleDB, state *TransactionDB) {
+    slot := state.Stack().Pop()
+    slotFormula := state.FormulaDepWithShorts(slot[:])
+
+    valueBin := data.Value.Bytes32()
     value := state.GetTransient(&data.Slot)
-    state.Stack().PushN(value)
+    valueFormula := state.FormulaDepWithShorts(value[:])
+
+    val := state.FormulaNewWithShorts(OPTLoad, valueBin[:], []Hash{valueFormula.hash, slotFormula.hash})
+    state.Stack().PushN(FormulaDEPBytes(val))
 }
 
 func (data DataTStore) Handle(db *SimpleDB, state *TransactionDB) {
-    state.Stack().Pop() // slot
+    slot := state.Stack().Pop()
+    slotFormula := state.FormulaDepWithShorts(slot[:])
+
     value := state.Stack().Pop()
-    state.SetTransient(&data.Slot, value[:])
+    valueBin := data.Value.Bytes32()
+    valueFormula := state.FormulaDepWithShorts(value[:])
+
+    val := state.FormulaNewWithShorts(OPTStore, valueBin[:], []Hash{valueFormula.hash, slotFormula.hash})
+    state.SetTransient(&data.Slot, FormulaDEPBytes(val))
 }
 
 func (data DataOne) Handle(db *SimpleDB, state *TransactionDB) { // aNum

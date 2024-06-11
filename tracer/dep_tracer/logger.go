@@ -184,7 +184,7 @@ func (l *Logger) logFormulasWithShorts(eventType string, addr Address, addrVersi
 }
 
 func solidityView(s *SimpleDB, formula Formula) {
-    if formula.opcode != OPSStore && formula.opcode != OPSLoad {
+    if formula.opcode != OPSStore && formula.opcode != OPSLoad && formula.opcode != OPTStore && formula.opcode != OPTLoad {
         return
     }
     solView := SolViewNew(s, s.GetFormula(formula.operands[1]))
