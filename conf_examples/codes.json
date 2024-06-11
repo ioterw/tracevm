@@ -14,7 +14,9 @@
         "return_data": false,
         "logs_short": false,
         "logs": false,
-        "sol_view": false
+        "sol_view": false,
+        "minimal_info": false,
+        "ignore_formulas": false
     },
     "output": "http://0.0.0.0:4334",
     "past_unknown": false

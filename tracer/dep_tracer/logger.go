@@ -24,6 +24,8 @@ type LoggerDefinition struct {
     LogsShort       bool           `json:"logs_short"`
     LogsFull        bool           `json:"logs"`
     SolView         bool           `json:"sol_view"`
+    MinimalInfo     bool           `json:"minimal_info"`
+    IgnoreFormulas  bool           `json:"ignore_formulas"`
 }
 
 func NewLoggerDefinition(ld *LoggerDefinition) *LoggerDefinition {
@@ -188,7 +190,7 @@ func solidityView(s *SimpleDB, formula Formula) {
         return
     }
     solView := SolViewNew(s, s.GetFormula(formula.operands[1]))
-    s.writer.Println("## SOLIDITY")
+    s.writer.Println("## SOLIDITY", OpcodeToString[formula.opcode])
     solView.Print(s.writer)
     s.writer.Println("# -         ", hex.EncodeToString(s.GetFormula(formula.operands[0]).result))
 }
@@ -199,20 +201,6 @@ func (l *Logger) logFormulas(
     codeAddr Address,
     outputFormulas map[string][]Formula,
 ) {
-    type MessageJSON struct {
-        EventType      string `json:"event_type"`
-        ShortTypes     map[string][]string `json:"short_types"`
-        Block          string `json:"block"`
-        TxHash         string `json:"txhash"`
-        Timestamp      uint64 `json:"timestamp"`
-        Origin         string `json:"origin"`
-        Address        string `json:"address"`
-        AddressVersion uint64 `json:"address_version"`
-        CodeAddress    string `json:"code_address"`
-        CodeHash       string `json:"code_hash"`
-        InitcodeHash   string `json:"initcode_hash"`
-    }
-
     outputHashes := make(map[string][]string)
     for shortType, formulas := range outputFormulas {
         formulaHashes := []string{}
@@ -223,44 +211,79 @@ func (l *Logger) logFormulas(
         outputHashes[shortType] = formulaHashes
     }
 
-    message := MessageJSON{}
-    message.EventType      = eventType
-    message.ShortTypes     = outputHashes
-    message.Block          = l.context.block.String()
-    message.TxHash         = hex.EncodeToString(l.context.txHash[:])
-    message.Timestamp      = l.context.timestamp
-    message.Origin         = hex.EncodeToString(l.context.origin[:])
-    message.Address        = hex.EncodeToString(addr[:])
-    message.AddressVersion = addrVersion
-    message.CodeAddress    = hex.EncodeToString(codeAddr[:])
-    message.CodeHash       = hex.EncodeToString(l.context.codeHash[:])
-    message.InitcodeHash   = hex.EncodeToString(l.context.initcodeHash[:])
+    l.writer.Println("## INFO")
+    if l.toLog.MinimalInfo {
+        type MessageJSON struct {
+            EventType      string `json:"event_type"`
+            Address        string `json:"address"`
+        }
 
-    encodedMessage, err := json.MarshalIndent(message, "", "  ")
-    if err != nil {
-        panic(err)
+        message := MessageJSON{}
+        message.EventType = eventType
+        message.Address   = hex.EncodeToString(addr[:])
+
+        encodedMessage, err := json.MarshalIndent(message, "", "  ")
+        if err != nil {
+            panic(err)
+        }
+        l.writer.Println(string(encodedMessage))
+    } else {
+        type MessageJSON struct {
+            EventType      string `json:"event_type"`
+            ShortTypes     map[string][]string `json:"short_types"`
+            Block          string `json:"block"`
+            TxHash         string `json:"txhash"`
+            Timestamp      uint64 `json:"timestamp"`
+            Origin         string `json:"origin"`
+            Address        string `json:"address"`
+            AddressVersion uint64 `json:"address_version"`
+            CodeAddress    string `json:"code_address"`
+            CodeHash       string `json:"code_hash"`
+            InitcodeHash   string `json:"initcode_hash"`
+        }
+
+        message := MessageJSON{}
+        message.EventType      = eventType
+        message.ShortTypes     = outputHashes
+        message.Block          = l.context.block.String()
+        message.TxHash         = hex.EncodeToString(l.context.txHash[:])
+        message.Timestamp      = l.context.timestamp
+        message.Origin         = hex.EncodeToString(l.context.origin[:])
+        message.Address        = hex.EncodeToString(addr[:])
+        message.AddressVersion = addrVersion
+        message.CodeAddress    = hex.EncodeToString(codeAddr[:])
+        message.CodeHash       = hex.EncodeToString(l.context.codeHash[:])
+        message.InitcodeHash   = hex.EncodeToString(l.context.initcodeHash[:])
+
+        encodedMessage, err := json.MarshalIndent(message, "", "  ")
+        if err != nil {
+            panic(err)
+        }
+        l.writer.Println(string(encodedMessage))
     }
 
-    l.writer.Println("## INFO")
-    l.writer.Println(string(encodedMessage))
     if l.toLog.SolView && len(outputFormulas["crypto"]) > 0 {
         cryptoFormula := outputFormulas["crypto"][0]
         solidityView(l.simpleDB, cryptoFormula)
     }
-    for shortType, formulas := range outputFormulas {
-        if shortType == "full" {
-            continue
+
+    if !l.toLog.IgnoreFormulas {
+        for shortType, formulas := range outputFormulas {
+            if shortType == "full" {
+                continue
+            }
+            for _, formula := range formulas {
+                l.writer.Println("##", strings.ToUpper(shortType))
+                l.simpleDB.Print(formula)
+            }
         }
-        for _, formula := range formulas {
-            l.writer.Println("##", strings.ToUpper(shortType))
-            l.simpleDB.Print(formula)
+        if formulas, ok := outputFormulas["full"]; ok {
+            for _, formula := range formulas {
+                l.writer.Println("## FULL")
+                l.simpleDB.Print(formula)
+            }
         }
     }
-    if formulas, ok := outputFormulas["full"]; ok {
-        for _, formula := range formulas {
-            l.writer.Println("## FULL")
-            l.simpleDB.Print(formula)
-        }
-    }
+
     l.writer.Println()
 }
