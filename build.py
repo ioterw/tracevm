@@ -37,12 +37,12 @@ def build_geth(root):
     os.chdir(root + '/go-ethereum')
 
     shutil.rmtree('eth/tracers/live/dep_tracer',  ignore_errors=True)
-    rmfile('eth/tracers/live/dep_geth.go')
+    rmfile('eth/tracers/live/geth_dep.go')
 
     mkdir('eth/tracers/live/dep_tracer')
     for path in glob.iglob('../tracer/dep_tracer/*.go'):
         shutil.copy(path, 'eth/tracers/live/dep_tracer/')
-    shutil.copy('../tracer/extra/dep_geth.go', 'eth/tracers/live/dep_geth.go')
+    shutil.copy('../tracer/extra/geth_dep.go', 'eth/tracers/live/geth_dep.go')
 
     popen(['go', 'get', 'github.com/basho/riak-go-client'])
     popen(['make', 'geth'])
@@ -52,7 +52,7 @@ def build_geth(root):
 
     shutil.copy('go-ethereum/build/bin/geth', 'build/geth')
     shutil.copy('conf_examples/default.json', 'build/conf.json')
-    shutil.copy('tracer/extra/run.py', 'build/run.py')
+    shutil.copy('tracer/extra/geth_run.py', 'build/run.py')
 
     st = os.stat('build/run.py')
     os.chmod('build/run.py', st.st_mode | stat.S_IEXEC)
@@ -76,9 +76,9 @@ def build_foundry(root):
 
     os.chdir(root + '/foundry')
 
-    shutil.copy('../tracer/extra/build_foundry.rs', 'crates/evm/evm/build.rs')
+    shutil.copy('../tracer/extra/foundry_build.rs', 'crates/evm/evm/build.rs')
     mkdir('crates/evm/evm/src/inspectors/debugger')
-    shutil.copy('../tracer/extra/mod_foundry.rs', 'crates/evm/evm/src/inspectors/debugger/dep_tracer.rs')
+    shutil.copy('../tracer/extra/foundry_mod.rs', 'crates/evm/evm/src/inspectors/debugger/dep_tracer.rs')
 
     reset_file('Cargo.toml')
     patch_file(
