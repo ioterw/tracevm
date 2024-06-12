@@ -4,7 +4,7 @@ This tool is used to track the values and addresses of slots (storage variables 
 
 - Partial symbolic execution provides the complete data on how a specific variable or slot address was calculated
 - Suitable for learning about Solidity internals
-- Written in Go and Python
+- Written in Go
 
 ## Docker
 
