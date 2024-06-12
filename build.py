@@ -199,7 +199,10 @@ def build_foundry(root):
 def main(target):
     root = os.path.dirname(os.path.abspath(__file__))
     target = target.strip('/')
-    if target in ['geth', 'go-ethereum']:
+    if target == 'all':
+        build_geth(root)
+        build_foundry(root)
+    elif target in ['geth', 'go-ethereum']:
         build_geth(root)
     elif target == 'lib':
         build_lib(root)
@@ -207,8 +210,11 @@ def main(target):
         build_foundry(root)
     else:
         print('Unknown target:', target)
-        print('Targets: geth, lib, foundry')
+        print('Targets: all, geth, lib, foundry')
         exit(1)
 
 if __name__ == '__main__':
-    main(sys.argv[1])
+    if len(sys.argv) > 1:
+        main(sys.argv[1])
+    else:
+        main('all')
