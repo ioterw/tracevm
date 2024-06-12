@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-import os, subprocess, shutil, glob, sys, re
+import os, subprocess, shutil, glob, sys, re, stat
 
 def popen(*args, **kwargs):
     p = subprocess.Popen(*args, **kwargs)
@@ -46,14 +46,16 @@ def build_geth(root):
 
     popen(['go', 'get', 'github.com/basho/riak-go-client'])
     popen(['make', 'geth'])
-    shutil.copy('build/bin/geth', '..')
 
     os.chdir('..')
     mkdir('build')
-    shutil.copy('run.py', 'build')
-    shutil.copy('geth', 'build')
-    shutil.copy('conf_examples/default.json', 'conf.json')
-    shutil.copy('conf.json', 'build')
+
+    shutil.copy('go-ethereum/build/bin/geth', 'build/geth')
+    shutil.copy('conf_examples/default.json', 'build/conf.json')
+    shutil.copy('run.py', 'build/run.py')
+
+    st = os.stat('build/run.py')
+    os.chmod('build/run.py', st.st_mode | stat.S_IEXEC)
 
 def build_lib(root):
     os.chdir(root + '/tracer')
