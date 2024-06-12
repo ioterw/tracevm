@@ -198,7 +198,8 @@ def build_foundry(root):
 
 def main(target):
     root = os.path.dirname(os.path.abspath(__file__))
-    if target == 'geth':
+    target = target.strip('/')
+    if target in ['geth', 'go-ethereum']:
         build_geth(root)
     elif target == 'lib':
         build_lib(root)
