@@ -52,7 +52,7 @@ def build_geth(root):
 
     shutil.copy('go-ethereum/build/bin/geth', 'build/geth')
     shutil.copy('conf_examples/default.json', 'build/conf.json')
-    shutil.copy('run.py', 'build/run.py')
+    shutil.copy('tracer/extra/run.py', 'build/run.py')
 
     st = os.stat('build/run.py')
     os.chmod('build/run.py', st.st_mode | stat.S_IEXEC)
