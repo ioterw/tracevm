@@ -49,6 +49,7 @@ It is possible to build TracEVM with such command.
 To open webview on address [127.0.0.1:4334](http://127.0.0.1:4334) run the following command.
 
 ```bash
+cd build
 ./run.py conf.json
 ```
 
