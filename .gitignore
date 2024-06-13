@@ -1,6 +1,2 @@
-*.txt
 build
-geth
-conf.json
-
 __pycache__

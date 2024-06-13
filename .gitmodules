@@ -2,3 +2,9 @@
 	url = https://github.com/ethereum/go-ethereum.git
 	path = go-ethereum
 	shallow = true
+[submodule "foundry/revm-inspectors"]
+	path = foundry/revm-inspectors
+	url = https://github.com/paradigmxyz/revm-inspectors.git
+[submodule "foundry/foundry"]
+	path = foundry/foundry
+	url = https://github.com/foundry-rs/foundry.git

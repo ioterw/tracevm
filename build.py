@@ -74,11 +74,11 @@ def build_lib(root):
 def build_foundry(root):
     build_lib(root)
 
-    os.chdir(root + '/foundry')
+    os.chdir(root + '/foundry/foundry')
 
-    shutil.copy('../tracer/extra/foundry_build.rs', 'crates/evm/evm/build.rs')
+    shutil.copy('../../tracer/extra/foundry_build.rs', 'crates/evm/evm/build.rs')
     mkdir('crates/evm/evm/src/inspectors/debugger')
-    shutil.copy('../tracer/extra/foundry_mod.rs', 'crates/evm/evm/src/inspectors/debugger/dep_tracer.rs')
+    shutil.copy('../../tracer/extra/foundry_mod.rs', 'crates/evm/evm/src/inspectors/debugger/dep_tracer.rs')
 
     reset_file('Cargo.toml')
     patch_file(
@@ -86,6 +86,17 @@ def build_foundry(root):
         r'rust\-version \= "1\.76"',
         'rust-version = "1.77.0"',
     )
+    patch_file(
+        'Cargo.toml',
+        r'revm\-inspectors\s*\=\s*\{\s*git\s*\=\s*"https\://github\.com/paradigmxyz/revm\-inspectors"\,\s*rev\s*\=\s*"5cf339c"\s*\,\s*features\s*\=\s*\[\s*"serde"\s*,\s*\]\s*}',
+        'revm-inspectors = { path = "../revm-inspectors", features = ["serde"] }',
+    )
+
+    # revm-inspectors = { git = "https://github.com/paradigmxyz/revm-inspectors", rev = "5cf339c", features = [
+    #     "serde",
+    # ] }
+
+    # revm-inspectors = { path = "../revm-inspectors", features = ["serde"] }
 
     reset_file('crates/cast/bin/cmd/run.rs')
     patch_file(
@@ -194,7 +205,7 @@ def build_foundry(root):
     popen(['cargo', 'build'], env=env)
     os.chdir('../..')
 
-    shutil.copy('target/debug/cast', '../build/tracevm-cast')
+    shutil.copy('target/debug/cast', '../../build/tracevm-cast')
 
 def main(target):
     root = os.path.dirname(os.path.abspath(__file__))
