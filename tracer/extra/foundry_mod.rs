@@ -105,7 +105,8 @@ impl Default for DepData {
                         \"logs\": false,
                         \"sol_view\": true,
                         \"minimal_info\": true,
-                        \"ignore_formulas\": false
+                        \"omit_info\": false,
+                        \"omit_formulas\": false
                     },
                     \"output\": \"http://0.0.0.0:4334\",
                     \"past_unknown\": true
