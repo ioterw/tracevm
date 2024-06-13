@@ -106,7 +106,8 @@ impl Default for DepData {
                         \"sol_view\": true,
                         \"minimal_info\": true,
                         \"omit_info\": false,
-                        \"omit_formulas\": false
+                        \"omit_formulas\": false,
+                        \"output_format\": \"json\"
                     },
                     \"output\": \"http://0.0.0.0:4334\",
                     \"past_unknown\": true

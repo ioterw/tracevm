@@ -45,8 +45,14 @@ var WebviewPageData string = `<!DOCTYPE html>
                 if (xhr.readyState != XMLHttpRequest.DONE) {
                     return
                 }
-                var text = xhr.responseText
-                var blocks = text.trim().split('\n\n')
+                var text = xhr.responseText.trim()
+                if (text.startsWith('{')) {
+                    var is_json = true
+                    var blocks = text.split('\n')
+                } else {
+                    var is_json = false
+                    var blocks = text.split('\n\n')
+                }
                 if (blocks[0] == '') {
                     blocks = []
                 }
@@ -56,6 +62,9 @@ var WebviewPageData string = `<!DOCTYPE html>
                 }
                 for (var i = blocksNum; i < blocks.length; i++) {
                     var block = blocks[i]
+                    if (is_json) {
+                        block = JSON.stringify(JSON.parse(block), null, 4)
+                    }
                     var el = document.createElement('code')
                     el.className = "language-python"
                     el.textContent = block
