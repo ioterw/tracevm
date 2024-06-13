@@ -69,7 +69,7 @@ def build_lib(root):
     env['CGO_ENABLED'] = '1'
     popen(['go', 'build', '-buildmode=c-archive', 'libdep.go'], env=env)
     shutil.move('libdep.a', '../build')
-    shutil.move('libdep.h', '../build')
+    # shutil.move('libdep.h', '../build')
 
 def build_foundry(root):
     build_lib(root)
@@ -88,15 +88,9 @@ def build_foundry(root):
     )
     patch_file(
         'Cargo.toml',
-        r'revm\-inspectors\s*\=\s*\{\s*git\s*\=\s*"https\://github\.com/paradigmxyz/revm\-inspectors"\,\s*rev\s*\=\s*"5cf339c"\s*\,\s*features\s*\=\s*\[\s*"serde"\s*,\s*\]\s*}',
+        r'revm\-inspectors\s*\=\s*\{\s*git\s*\=\s*"https\://github\.com/paradigmxyz/revm\-inspectors"\s*\,\s*rev\s*\=\s*"5cf339c"\s*\,\s*features\s*\=\s*\[\s*"serde"\s*,\s*\]\s*}',
         'revm-inspectors = { path = "../revm-inspectors", features = ["serde"] }',
     )
-
-    # revm-inspectors = { git = "https://github.com/paradigmxyz/revm-inspectors", rev = "5cf339c", features = [
-    #     "serde",
-    # ] }
-
-    # revm-inspectors = { path = "../revm-inspectors", features = ["serde"] }
 
     reset_file('crates/cast/bin/cmd/run.rs')
     patch_file(

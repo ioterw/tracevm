@@ -30,6 +30,11 @@ typedef SizedArray (*get_code_function) (Address address);
 inline SizedArray get_code_bridge(get_code_function f, Address address) {
     return f(address);
 }
+
+typedef void (*set_solidity_log_function) (uint8_t type, Hash data);
+inline SizedArray set_solidity_log_bridge(set_solidity_log_function f, uint8_t type, Hash data) {
+    f(type, data);
+}
 */
 import "C"
 
@@ -43,10 +48,13 @@ import (
 
 func main() {}
 
-var getNoncePointer C.get_nonce_function   = nil
-var getCodePointer  C.get_code_function    = nil
-var cDepHandler     *dep_tracer.DepHandler = nil
-var cTracing        bool                   = false
+var (
+    getNoncePointer       C.get_nonce_function        = nil
+    getCodePointer        C.get_code_function         = nil
+    getSolidityLogPointer C.set_solidity_log_function = nil
+    cDepHandler           *dep_tracer.DepHandler      = nil
+    cTracing              bool                        = false
+)
 
 
 //export RegisterGetNonce
@@ -56,6 +64,10 @@ func RegisterGetNonce(pointer C.get_nonce_function) {
 //export RegisterGetCode
 func RegisterGetCode(pointer C.get_code_function) {
    getCodePointer = pointer
+}
+//export RegisterGetSolidityLog
+func RegisterGetSolidityLog(pointer C.set_solidity_log_function) {
+   getSolidityLogPointer = pointer
 }
 
 func packAddress(addr dep_tracer.Address) C.Address {
@@ -69,6 +81,13 @@ func unpackAddress(addr C.Address) dep_tracer.Address {
     res := dep_tracer.Address {}
     for i := 0; i < 20; i ++ {
         res[i] = byte(addr.data[i])
+    }
+    return res
+}
+func packHash(hash dep_tracer.Hash)  C.Hash {
+    res := C.Hash {}
+    for i := 0; i < 32; i ++ {
+        res.data[i] = C.uint8_t(hash[i])
     }
     return res
 }
