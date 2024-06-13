@@ -107,7 +107,7 @@ impl Default for DepData {
                         \"minimal_info\": true,
                         \"omit_info\": false,
                         \"omit_formulas\": false,
-                        \"output_format\": \"json\"
+                        \"output_format\": \"text\"
                     },
                     \"output\": \"http://0.0.0.0:4334\",
                     \"past_unknown\": true
