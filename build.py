@@ -69,7 +69,7 @@ def build_lib(root):
     env['CGO_ENABLED'] = '1'
     popen(['go', 'build', '-buildmode=c-archive', 'libdep.go'], env=env)
     shutil.move('libdep.a', '../build')
-    # shutil.move('libdep.h', '../build')
+    shutil.move('libdep.h', '../build')
 
 def build_foundry(root):
     build_lib(root)

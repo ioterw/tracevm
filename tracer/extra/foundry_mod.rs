@@ -54,33 +54,9 @@ fn stack_to_cstack(stack: &Vec<U256>) -> CStack {
     }
 }
 
-#[derive(PartialEq, PartialOrd)]
-#[repr(u8)]
-enum SolLogType {
-    SStore  = 1,
-    SLoad   = 2,
-    TStore  = 3,
-    TLoad   = 4,
-
-    Const   = 5,
-    Mapping = 6,
-    Offset  = 7,
-
-    Result  = 8,
-}
-impl SolLogType {
-    fn is_start(self) -> bool {
-        return self <= SolLogType::TLoad;
-    }
-    fn is_end(self) -> bool {
-        return self == SolLogType::Result;
-    }
-}
-
 extern "C" {
     fn RegisterGetNonce(ptr: extern "C" fn(CAddress) -> u64);
     fn RegisterGetCode(ptr: extern "C" fn(CAddress) -> CSizedArray);
-    fn SetSolidityLog(ptr: extern "C" fn(SolLogType, CHash));
 
     fn InitDep(cfg: *const i8);
 
