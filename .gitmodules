@@ -2,6 +2,3 @@
 	url = https://github.com/ethereum/go-ethereum.git
 	path = go-ethereum
 	shallow = true
-[submodule "foundry"]
-	path = foundry
-	url = https://github.com/foundry-rs/foundry.git
