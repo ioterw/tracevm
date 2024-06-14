@@ -76,37 +76,78 @@ extern "C" {
     fn HandleFault(op: u8);
 }
 
+#[repr(u8)]
+pub(crate) enum DepDataType {
+    Debug = 1,
+    Trace = 2,
+}
+
 #[derive(Clone, Debug)]
-pub(crate) struct DepData {
+pub(crate) struct DepData<const DATA_TYPE: u8> {
     pub call_depth: i32,
 }
-impl Default for DepData {
-    fn default() -> DepData {
-        let cfg = CString::new("{
-            \"kv\": {\"engine\": \"amnesia\", \"root\": \"\"}, 
-            \"logger\": {
-                \"opcodes_short\": [\"e0\", \"e1\", \"e2\", \"e3\"],
-                \"opcodes\": [],
-                \"final_slots_short\": true,
-                \"final_slots\": false,
-                \"codes_short\": false,
-                \"codes\": false,
-                \"return_data_short\": false,
-                \"return_data\": false,
-                \"logs_short\": false,
-                \"logs\": false,
-                \"sol_view\": true,
-                \"minimal_info\": true,
-                \"omit_info\": false,
-                \"omit_formulas\": false,
-                \"output_format\": \"text\"
-            },
-            \"output\": \"http://0.0.0.0:4334\",
-            \"past_unknown\": true
-        }").expect("CString::new failed");
+impl<const DATA_TYPE: u8> Default for DepData<DATA_TYPE> {
+    fn default() -> DepData<DATA_TYPE> {
+        let cfg: &str;
+        let callback: Option<extern "C" fn(*const c_char)>;
+
+        match DATA_TYPE {
+            1_u8 => {
+                cfg = "{
+                    \"kv\": {\"engine\": \"amnesia\", \"root\": \"\"}, 
+                    \"logger\": {
+                        \"opcodes_short\": [\"e0\", \"e1\", \"e2\", \"e3\"],
+                        \"opcodes\": [],
+                        \"final_slots_short\": true,
+                        \"final_slots\": false,
+                        \"codes_short\": false,
+                        \"codes\": false,
+                        \"return_data_short\": false,
+                        \"return_data\": false,
+                        \"logs_short\": false,
+                        \"logs\": false,
+                        \"sol_view\": true,
+                        \"minimal_info\": true,
+                        \"omit_info\": false,
+                        \"omit_formulas\": false,
+                        \"output_format\": \"text\"
+                    },
+                    \"output\": \"http://0.0.0.0:4334\",
+                    \"past_unknown\": true
+                }";
+                callback = None;
+            }
+            2_u8 => {
+                cfg = "{
+                    \"kv\": {\"engine\": \"amnesia\", \"root\": \"\"}, 
+                    \"logger\": {
+                        \"opcodes_short\": [\"e0\", \"e1\", \"e2\", \"e3\"],
+                        \"opcodes\": [],
+                        \"final_slots_short\": false,
+                        \"final_slots\": false,
+                        \"codes_short\": false,
+                        \"codes\": false,
+                        \"return_data_short\": false,
+                        \"return_data\": false,
+                        \"logs_short\": false,
+                        \"logs\": false,
+                        \"sol_view\": true,
+                        \"minimal_info\": false,
+                        \"omit_info\": true,
+                        \"omit_formulas\": true,
+                        \"output_format\": \"json\"
+                    },
+                    \"output\": \"\",
+                    \"past_unknown\": true
+                }";
+                callback = Some(log_callback);
+            }
+            _ => panic!("Unknown DATA_TYPE")
+        }
+
+        let ccfg = CString::new(cfg).expect("CString::new failed");
         unsafe {
-            let null_ptr: Option<extern "C" fn(*const c_char)> = None;
-            InitDep(cfg.as_ptr(), null_ptr);
+            InitDep(ccfg.as_ptr(), callback);
             RegisterGetNonce(get_nonce);
             RegisterGetCode(get_code);
         }
@@ -147,6 +188,15 @@ fn get_code(_addr: CAddress) -> CSizedArray {
 static mut GET_CODE_ADDRESS: Address = ZERO_ADDRESS;
 static mut GET_CODE_DATA:    Bytes   = Bytes::new();
 
+extern "C"
+fn log_callback(data: *const c_char) {
+    let c_str: &std::ffi::CStr;
+    unsafe {
+        c_str = std::ffi::CStr::from_ptr(data);
+    }
+    println!("log_callback {:?}", c_str);
+}
+
 
 static mut ACTIVATED_HASH: FixedBytes<32> = FixedBytes::ZERO;
 fn is_activated() -> bool {
@@ -165,7 +215,7 @@ pub fn deactivate() {
     }
 }
 
-fn on_enter<DB:DatabaseExt>(data: &mut DepData, context: &mut EvmContext<DB>, is_create: bool, input: &Bytes, addr: Address) {
+fn on_enter<DB:DatabaseExt, const DATA_TYPE: u8>(data: &mut DepData<DATA_TYPE>, context: &mut EvmContext<DB>, is_create: bool, input: &Bytes, addr: Address) {
     if !is_activated() {
         return;
     }
@@ -211,7 +261,7 @@ fn on_enter<DB:DatabaseExt>(data: &mut DepData, context: &mut EvmContext<DB>, is
     data.call_depth += 1;
 }
 
-fn on_exit<DB:DatabaseExt>(data: &mut DepData, context: &mut EvmContext<DB>, result: &InterpreterResult) {
+fn on_exit<DB:DatabaseExt, const DATA_TYPE: u8>(data: &mut DepData<DATA_TYPE>, context: &mut EvmContext<DB>, result: &InterpreterResult) {
     if !is_activated() {
         return;
     }
@@ -232,7 +282,7 @@ fn on_exit<DB:DatabaseExt>(data: &mut DepData, context: &mut EvmContext<DB>, res
     }
 }
 
-pub(crate) fn dep_step<DB:DatabaseExt>(_data: &mut DepData, interp: &mut Interpreter, context: &mut EvmContext<DB>) {
+pub(crate) fn dep_step<DB:DatabaseExt, const DATA_TYPE: u8>(_data: &mut DepData<DATA_TYPE>, interp: &mut Interpreter, context: &mut EvmContext<DB>) {
     if !is_activated() {
         return;
     }
@@ -298,7 +348,7 @@ pub(crate) fn dep_step<DB:DatabaseExt>(_data: &mut DepData, interp: &mut Interpr
     }
 }
 
-pub(crate) fn dep_step_end<DB:DatabaseExt>(_data: &mut DepData, interp: &mut Interpreter, context: &mut EvmContext<DB>) {
+pub(crate) fn dep_step_end<DB:DatabaseExt, const DATA_TYPE: u8>(_data: &mut DepData<DATA_TYPE>, interp: &mut Interpreter, context: &mut EvmContext<DB>) {
     if !is_activated() {
         return;
     }
@@ -310,20 +360,20 @@ pub(crate) fn dep_step_end<DB:DatabaseExt>(_data: &mut DepData, interp: &mut Int
     }
 }
 
-pub(crate) fn dep_call<DB:DatabaseExt>(data: &mut DepData, context: &mut EvmContext<DB>, inputs: &mut CallInputs) {
+pub(crate) fn dep_call<DB:DatabaseExt, const DATA_TYPE: u8>(data: &mut DepData<DATA_TYPE>, context: &mut EvmContext<DB>, inputs: &mut CallInputs) {
     let addr = inputs.target_address;
     on_enter(data, context, false, &inputs.input, addr)
 }
 
-pub(crate) fn dep_call_end<DB:DatabaseExt>(data: &mut DepData, context: &mut EvmContext<DB>, _inputs: &CallInputs, outcome: &CallOutcome) {
+pub(crate) fn dep_call_end<DB:DatabaseExt, const DATA_TYPE: u8>(data: &mut DepData<DATA_TYPE>, context: &mut EvmContext<DB>, _inputs: &CallInputs, outcome: &CallOutcome) {
     on_exit(data, context, &outcome.result)
 }
 
-pub(crate) fn dep_create<DB:DatabaseExt>(data: &mut DepData, context: &mut EvmContext<DB>, inputs: &mut CreateInputs) {
+pub(crate) fn dep_create<DB:DatabaseExt, const DATA_TYPE: u8>(data: &mut DepData<DATA_TYPE>, context: &mut EvmContext<DB>, inputs: &mut CreateInputs) {
     let addr = inputs.created_address(context.journaled_state.account(inputs.caller).info.nonce);
     on_enter(data, context, true, &inputs.init_code, addr)
 }
 
-pub(crate) fn dep_create_end<DB:DatabaseExt>(data: &mut DepData, context: &mut EvmContext<DB>, _inputs: &CreateInputs, outcome: &CreateOutcome) {
+pub(crate) fn dep_create_end<DB:DatabaseExt, const DATA_TYPE: u8>(data: &mut DepData<DATA_TYPE>, context: &mut EvmContext<DB>, _inputs: &CreateInputs, outcome: &CreateOutcome) {
     on_exit(data, context, &outcome.result)
 }

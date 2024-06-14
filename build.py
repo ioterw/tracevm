@@ -111,8 +111,6 @@ def build_foundry(root):
         ),
     )
 
-
-
     reset_file('crates/evm/evm/src/inspectors/mod.rs')
     patch_file(
         'crates/evm/evm/src/inspectors/mod.rs',
@@ -130,7 +128,7 @@ def build_foundry(root):
         (
             '\n'
             'pub struct Debugger {\n'
-            '    dep_data: dep_tracer::DepData,\n'
+            '    dep_data: dep_tracer::DepData<{dep_tracer::DepDataType::Debug as u8}>,\n'
         ),
     )
     patch_file(
