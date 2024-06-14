@@ -30,14 +30,19 @@ func (s *SolView) Print(writer OutputWriter) {
     }
 }
 
-func (s *SolView) Serialize() [][]byte {
-    sig := []byte{}
+func (s *SolView) JSON() [][2]string {
+    res := [][2]string{}
     for _, line := range *s {
-        sig = append(sig, line.Type)
-    }
-    res := [][]byte{sig}
-    for _, line := range *s {
-        res = append(res, line.Data)
+        switch line.Type {
+        case 'c':
+            res = append(res, [2]string{"constant", hex.EncodeToString(line.Data)})
+        case 'o':
+            res = append(res, [2]string{"offset", hex.EncodeToString(line.Data)})
+        case 'm':
+            res = append(res, [2]string{"mapping", hex.EncodeToString(line.Data)})
+        default:
+            panic("unknown type")
+        }
     }
     return res
 }

@@ -194,21 +194,40 @@ func (l *Logger) logFormulasWithShorts(eventType string, addr Address, addrVersi
     }
 }
 
-func solidityView(s *SimpleDB, formula Formula) {
+func solidityView(s *SimpleDB, formula Formula, isJson bool) any {
     if formula.opcode != OPSStore && formula.opcode != OPSLoad && formula.opcode != OPTStore && formula.opcode != OPTLoad {
-        return
+        return nil
     }
     solView := SolViewNew(s, s.GetFormula(formula.operands[1]))
-    s.writer.Println("## SOLIDITY")
-    s.writer.Println(
-        "#",
-        OpcodeToString[formula.opcode],
-        hex.EncodeToString(s.GetFormula(formula.operands[1]).result),
-        "=>",
-        hex.EncodeToString(s.GetFormula(formula.operands[0]).result),
-    )
-    solView.Print(s.writer)
+    if !isJson {
+        s.writer.Println("## SOLIDITY")
+        s.writer.Println(
+            "#",
+            OpcodeToString[formula.opcode],
+            hex.EncodeToString(s.GetFormula(formula.operands[1]).result),
+            "=>",
+            hex.EncodeToString(s.GetFormula(formula.operands[0]).result),
+        )
+        solView.Print(s.writer)
+        return nil
+    } else {
+        type InfoJSON struct {
+            Offsets [][2]string `json:"offsets"`
+            OPCode  string      `json:"opcode"`
+            Key     string      `json:"key"`
+            Value   string      `json:"value"`
+        }
+        res := InfoJSON {
+            Offsets: solView.JSON(),
+            OPCode:  strings.ToLower(OpcodeToString[formula.opcode]),
+            Key:     hex.EncodeToString(s.GetFormula(formula.operands[1]).result),
+            Value:   hex.EncodeToString(s.GetFormula(formula.operands[0]).result),
+        }
+        return res
+    }
 }
+
+
 
 func (l *Logger) logFormulas(
     eventType string,
@@ -216,73 +235,73 @@ func (l *Logger) logFormulas(
     codeAddr Address,
     outputFormulas map[string][]Formula,
 ) {
-    if l.toLog.OutputFormat == "text" {
-        outputHashes := make(map[string][]string)
-        for shortType, formulas := range outputFormulas {
-            formulaHashes := []string{}
-            for _, v := range formulas {
-                h := v.hash
-                formulaHashes = append(formulaHashes, hex.EncodeToString(h[:]))
-            }
-            outputHashes[shortType] = formulaHashes
+    outputHashes := make(map[string][]string)
+    for shortType, formulas := range outputFormulas {
+        formulaHashes := []string{}
+        for _, v := range formulas {
+            h := v.hash
+            formulaHashes = append(formulaHashes, hex.EncodeToString(h[:]))
         }
+        outputHashes[shortType] = formulaHashes
+    }
 
+    getInfo := func() any {
+        var info any
+        if l.toLog.MinimalInfo {
+            type MinimalInfoJSON struct {
+                EventType      string `json:"event_type"`
+                Address        string `json:"address"`
+            }
+
+            info = MinimalInfoJSON {
+                EventType: eventType,
+                Address:   hex.EncodeToString(addr[:]),
+            }
+        } else {
+            type InfoJSON struct {
+                EventType      string `json:"event_type"`
+                ShortTypes     map[string][]string `json:"short_types"`
+                Block          string `json:"block"`
+                TxHash         string `json:"txhash"`
+                Timestamp      uint64 `json:"timestamp"`
+                Origin         string `json:"origin"`
+                Address        string `json:"address"`
+                AddressVersion uint64 `json:"address_version"`
+                CodeAddress    string `json:"code_address"`
+                CodeHash       string `json:"code_hash"`
+                InitcodeHash   string `json:"initcode_hash"`
+            }
+
+            info = InfoJSON {
+                EventType:      eventType,
+                ShortTypes:     outputHashes,
+                Block:          l.context.block.String(),
+                TxHash:         hex.EncodeToString(l.context.txHash[:]),
+                Timestamp:      l.context.timestamp,
+                Origin:         hex.EncodeToString(l.context.origin[:]),
+                Address:        hex.EncodeToString(addr[:]),
+                AddressVersion: addrVersion,
+                CodeAddress:    hex.EncodeToString(codeAddr[:]),
+                CodeHash:       hex.EncodeToString(l.context.codeHash[:]),
+                InitcodeHash:   hex.EncodeToString(l.context.initcodeHash[:]),
+            }
+        }
+        return info
+    }
+
+    if l.toLog.OutputFormat == "text" {
         if !l.toLog.OmitInfo {
             l.writer.Println("## INFO")
-            if l.toLog.MinimalInfo {
-                type MessageJSON struct {
-                    EventType      string `json:"event_type"`
-                    Address        string `json:"address"`
-                }
-
-                message := MessageJSON{}
-                message.EventType = eventType
-                message.Address   = hex.EncodeToString(addr[:])
-
-                encodedMessage, err := json.MarshalIndent(message, "", "  ")
-                if err != nil {
-                    panic(err)
-                }
-                l.writer.Println(string(encodedMessage))
-            } else {
-                type MessageJSON struct {
-                    EventType      string `json:"event_type"`
-                    ShortTypes     map[string][]string `json:"short_types"`
-                    Block          string `json:"block"`
-                    TxHash         string `json:"txhash"`
-                    Timestamp      uint64 `json:"timestamp"`
-                    Origin         string `json:"origin"`
-                    Address        string `json:"address"`
-                    AddressVersion uint64 `json:"address_version"`
-                    CodeAddress    string `json:"code_address"`
-                    CodeHash       string `json:"code_hash"`
-                    InitcodeHash   string `json:"initcode_hash"`
-                }
-
-                message := MessageJSON{}
-                message.EventType      = eventType
-                message.ShortTypes     = outputHashes
-                message.Block          = l.context.block.String()
-                message.TxHash         = hex.EncodeToString(l.context.txHash[:])
-                message.Timestamp      = l.context.timestamp
-                message.Origin         = hex.EncodeToString(l.context.origin[:])
-                message.Address        = hex.EncodeToString(addr[:])
-                message.AddressVersion = addrVersion
-                message.CodeAddress    = hex.EncodeToString(codeAddr[:])
-                message.CodeHash       = hex.EncodeToString(l.context.codeHash[:])
-                message.InitcodeHash   = hex.EncodeToString(l.context.initcodeHash[:])
-
-                encodedMessage, err := json.MarshalIndent(message, "", "  ")
-                if err != nil {
-                    panic(err)
-                }
-                l.writer.Println(string(encodedMessage))
+            infoJSON, err := json.MarshalIndent(getInfo(), "", "  ")
+            if err != nil {
+                panic(err)
             }
+            l.writer.Println(string(infoJSON))
         }
 
         if l.toLog.SolView && len(outputFormulas["crypto"]) > 0 {
             cryptoFormula := outputFormulas["crypto"][0]
-            solidityView(l.simpleDB, cryptoFormula)
+            solidityView(l.simpleDB, cryptoFormula, false)
         }
 
         if !l.toLog.OmitFormulas {
@@ -305,6 +324,25 @@ func (l *Logger) logFormulas(
 
         l.writer.Println()
     } else if l.toLog.OutputFormat == "json" {
-        l.writer.Println("{}")
+        res := map[string]any{}
+
+        if !l.toLog.OmitInfo {
+            res["info"] = getInfo()
+        }
+
+        if l.toLog.SolView && len(outputFormulas["crypto"]) > 0 {
+            cryptoFormula := outputFormulas["crypto"][0]
+            if view := solidityView(l.simpleDB, cryptoFormula, true); view != nil {
+                res["solidity"] = view
+            }
+        }
+
+        // too lazy to implement formulas for now
+
+        resJSON, err := json.Marshal(res)
+        if err != nil {
+            panic(err)
+        }
+        l.writer.Println(string(resJSON))
     }
 }
