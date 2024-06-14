@@ -1,4 +1,4 @@
-use std::{ env, ffi::{CString, c_char} };
+use std::{ ffi::{CString, c_char} };
 use revm::{
     EvmContext,
     interpreter::{ Interpreter, OpCode, CallInputs, CallOutcome, CreateInputs, CreateOutcome, InterpreterResult },
@@ -82,44 +82,31 @@ pub(crate) struct DepData {
 }
 impl Default for DepData {
     fn default() -> DepData {
-        match env::var("DEP_CONFIG") {
-            Ok(val) => {
-                let cfg = CString::new(val).expect("CString::new failed");
-                unsafe {
-                    let null_ptr: Option<extern "C" fn(*const c_char)> = None;
-                    InitDep(cfg.as_ptr(), null_ptr);
-                }
+        let cfg = CString::new("{
+            \"kv\": {\"engine\": \"amnesia\", \"root\": \"\"}, 
+            \"logger\": {
+                \"opcodes_short\": [\"e0\", \"e1\", \"e2\", \"e3\"],
+                \"opcodes\": [],
+                \"final_slots_short\": true,
+                \"final_slots\": false,
+                \"codes_short\": false,
+                \"codes\": false,
+                \"return_data_short\": false,
+                \"return_data\": false,
+                \"logs_short\": false,
+                \"logs\": false,
+                \"sol_view\": true,
+                \"minimal_info\": true,
+                \"omit_info\": false,
+                \"omit_formulas\": false,
+                \"output_format\": \"text\"
             },
-            Err(_) => {
-                let cfg = CString::new("{
-                    \"kv\": {\"engine\": \"amnesia\", \"root\": \"\"}, 
-                    \"logger\": {
-                        \"opcodes_short\": [\"e0\", \"e1\", \"e2\", \"e3\"],
-                        \"opcodes\": [],
-                        \"final_slots_short\": true,
-                        \"final_slots\": false,
-                        \"codes_short\": false,
-                        \"codes\": false,
-                        \"return_data_short\": false,
-                        \"return_data\": false,
-                        \"logs_short\": false,
-                        \"logs\": false,
-                        \"sol_view\": true,
-                        \"minimal_info\": true,
-                        \"omit_info\": false,
-                        \"omit_formulas\": false,
-                        \"output_format\": \"text\"
-                    },
-                    \"output\": \"http://0.0.0.0:4334\",
-                    \"past_unknown\": true
-                }").expect("CString::new failed");
-                unsafe {
-                    let null_ptr: Option<extern "C" fn(*const c_char)> = None;
-                    InitDep(cfg.as_ptr(), null_ptr);
-                }
-            },
-        };
+            \"output\": \"http://0.0.0.0:4334\",
+            \"past_unknown\": true
+        }").expect("CString::new failed");
         unsafe {
+            let null_ptr: Option<extern "C" fn(*const c_char)> = None;
+            InitDep(cfg.as_ptr(), null_ptr);
             RegisterGetNonce(get_nonce);
             RegisterGetCode(get_code);
         }
