@@ -2,6 +2,7 @@ package main
 
 /*
 #include <stdint.h>
+#include <stdlib.h>
 
 typedef struct {
     uint8_t data[20];
@@ -29,6 +30,11 @@ inline uint64_t get_nonce_bridge(get_nonce_function f, Address address) {
 typedef SizedArray (*get_code_function) (Address address);
 inline SizedArray get_code_bridge(get_code_function f, Address address) {
     return f(address);
+}
+
+typedef uint64_t (*log_data_function) (char *data);
+inline void log_data_bridge(log_data_function f, char *data) {
+    f(data);
 }
 */
 import "C"
@@ -106,12 +112,25 @@ func (s StateDBC) GetCode(addr [20]byte) []byte {
     return unpackSizedArray(res)
 }
 
+type CallbackWriterCB struct {
+    pointer C.log_data_function
+}
+func (cw CallbackWriterCB) Write(data []byte) {
+    cdata := C.CString(string(data))
+    C.log_data_bridge(cw.pointer, cdata)
+    C.free(unsafe.Pointer(cdata))
+}
+
 //export InitDep
-func InitDep(cfg *C.char) {
+func InitDep(cfg *C.char, pointer C.log_data_function) {
     if cDepHandler != nil {
         panic("InitDep called twice")
     }
-    cDepHandler = dep_tracer.NewDepHandler([]byte(C.GoString(cfg)))
+    if pointer == nil {
+        cDepHandler = dep_tracer.NewDepHandler([]byte(C.GoString(cfg)), nil)
+    } else {
+        cDepHandler = dep_tracer.NewDepHandler([]byte(C.GoString(cfg)), CallbackWriterCB{pointer})        
+    }
 }
 
 //export StartTransactionRecording

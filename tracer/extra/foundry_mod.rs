@@ -1,4 +1,4 @@
-use std::{ env, ffi::CString };
+use std::{ env, ffi::{CString, c_char} };
 use revm::{
     EvmContext,
     interpreter::{ Interpreter, OpCode, CallInputs, CallOutcome, CreateInputs, CreateOutcome, InterpreterResult },
@@ -58,7 +58,7 @@ extern "C" {
     fn RegisterGetNonce(ptr: extern "C" fn(CAddress) -> u64);
     fn RegisterGetCode(ptr: extern "C" fn(CAddress) -> CSizedArray);
 
-    fn InitDep(cfg: *const i8);
+    fn InitDep(cfg: *const i8, ptr: Option<extern "C" fn(*const c_char)>);
 
     fn StartTransactionRecording(
         isCreate: bool, addr: CAddress, input: CSizedArray, block: u64,
@@ -86,7 +86,8 @@ impl Default for DepData {
             Ok(val) => {
                 let cfg = CString::new(val).expect("CString::new failed");
                 unsafe {
-                    InitDep(cfg.as_ptr());
+                    let null_ptr: Option<extern "C" fn(*const c_char)> = None;
+                    InitDep(cfg.as_ptr(), null_ptr);
                 }
             },
             Err(_) => {
@@ -113,7 +114,8 @@ impl Default for DepData {
                     \"past_unknown\": true
                 }").expect("CString::new failed");
                 unsafe {
-                    InitDep(cfg.as_ptr());
+                    let null_ptr: Option<extern "C" fn(*const c_char)> = None;
+                    InitDep(cfg.as_ptr(), null_ptr);
                 }
             },
         };

@@ -80,3 +80,27 @@ func (w *HttpWriter) Println(args ...any) {
 func (w *HttpWriter) Print(args ...any) {
     w.data = fmt.Append(w.data, args...)
 }
+
+func NewCallbackWriter(cw CallbackWriterCallback) *CallbackWriter {
+    if cw == nil {
+        panic("CallbackWriterCallback is not supplied")
+    }
+    res := &CallbackWriter{
+        cw: cw,
+    }
+    return res
+}
+type CallbackWriter struct {
+    cw CallbackWriterCallback
+}
+type CallbackWriterCallback interface {
+    Write(data []byte)
+}
+func (w *CallbackWriter) Println(args ...any) {
+    data := fmt.Appendln([]byte{}, args...)
+    w.cw.Write(data)
+}
+func (w *CallbackWriter) Print(args ...any) {
+    data := fmt.Append([]byte{}, args...)
+    w.cw.Write(data)
+}

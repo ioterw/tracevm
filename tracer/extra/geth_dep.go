@@ -32,7 +32,7 @@ func NewDep(cfg json.RawMessage) (*tracing.Hooks, error) {
         writingBlock:          false,
         transacting:           false,
         selfdestructProtector: false,
-        handler:               dep_tracer.NewDepHandler(cfg),
+        handler:               dep_tracer.NewDepHandler(cfg, nil),
         blockNumber:           nil,
         time:                  0,
     }

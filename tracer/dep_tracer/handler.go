@@ -31,7 +31,7 @@ type DepHandler struct {
     isSelfdestruct6780 bool
 }
 
-func NewDepHandler(cfg json.RawMessage) *DepHandler {
+func NewDepHandler(cfg json.RawMessage, cw CallbackWriterCallback) *DepHandler {
     type depTracerConfig struct {
         KV struct {
             Engine  string `json:"engine"`
@@ -57,7 +57,9 @@ func NewDepHandler(cfg json.RawMessage) *DepHandler {
         }
     }
     var writer OutputWriter
-    if config.Output == "" {
+    if cw != nil {
+        writer = NewCallbackWriter(cw)
+    } else if config.Output == "" {
         writer = NewStdoutWriter()
     } else if strings.HasPrefix(config.Output, "http://") {
         writer = NewHttpWriter(config.Output)
