@@ -84,6 +84,7 @@ pub enum DepDataType {
 #[derive(Clone, Debug)]
 pub struct DepData<const DATA_TYPE: u8> {
     pub call_depth: i32,
+    pub activated: bool,
 }
 impl<const DATA_TYPE: u8> DepData<DATA_TYPE> {
     pub fn clear(&mut self) {
@@ -92,6 +93,21 @@ impl<const DATA_TYPE: u8> DepData<DATA_TYPE> {
 }
 impl<const DATA_TYPE: u8> Default for DepData<DATA_TYPE> {
     fn default() -> DepData<DATA_TYPE> {
+        unsafe {
+            // easy fix
+            if DEP_DATA_TYPE != 0 {
+                if DEP_DATA_TYPE == DepDataType::Debug as u8 && DATA_TYPE == DepDataType::Trace as u8 {
+                    return DepData {
+                        call_depth: 0,
+                        activated: false,
+                    }
+                } else {
+                    panic!("Unknown DEP_DATA_TYPEs: {}, {}", DEP_DATA_TYPE, DATA_TYPE);
+                }
+            }
+            DEP_DATA_TYPE = DATA_TYPE;
+        }
+
         let cfg: &str;
         let callback: Option<extern "C" fn(*const c_char)>;
 
@@ -157,6 +173,7 @@ impl<const DATA_TYPE: u8> Default for DepData<DATA_TYPE> {
         }
         DepData {
             call_depth: 0,
+            activated: true,
         }
     }
 }
@@ -198,12 +215,28 @@ fn trace_callback(data: *const c_char) {
     unsafe {
         c_str = std::ffi::CStr::from_ptr(data);
     }
-    println!("trace_callback {:?}", c_str);
+    let str_slice: &str = c_str.to_str().unwrap();
+    unsafe {
+        TRACE_CALLBACK_DATA.push(str_slice);
+    }
 }
+pub struct TraceCallbackData {
 
+}
+impl TraceCallbackData {
+    pub fn push(&mut self, data: &str) {
+        println!("trace_callback {}", data);
+    }
+    pub fn pull(&mut self) {}
+}
+pub static mut TRACE_CALLBACK_DATA: TraceCallbackData = TraceCallbackData{};
 
 static mut ACTIVATED_HASH: FixedBytes<32> = FixedBytes::ZERO;
-fn is_activated() -> bool {
+static mut DEP_DATA_TYPE: u8 = 0;
+fn is_activated<const DATA_TYPE: u8>(data: &DepData<DATA_TYPE>) -> bool {
+    if !data.activated {
+        return false;
+    }
     unsafe {
         return ACTIVATED_HASH != FixedBytes::ZERO;
     }
@@ -213,14 +246,9 @@ pub fn activate(hash: FixedBytes<32>) {
         ACTIVATED_HASH = hash;
     }
 }
-pub fn deactivate() {
-    unsafe {
-        ACTIVATED_HASH = FixedBytes::ZERO;
-    }
-}
 
 fn on_enter<DB:Database, const DATA_TYPE: u8>(data: &mut DepData<DATA_TYPE>, context: &mut EvmContext<DB>, is_create: bool, input: &Bytes, addr: Address) {
-    if !is_activated() {
+    if !is_activated(data) {
         return;
     }
 
@@ -269,7 +297,7 @@ fn on_enter<DB:Database, const DATA_TYPE: u8>(data: &mut DepData<DATA_TYPE>, con
 }
 
 fn on_exit<DB:Database, const DATA_TYPE: u8>(data: &mut DepData<DATA_TYPE>, context: &mut EvmContext<DB>, result: &InterpreterResult) {
-    if !is_activated() {
+    if !is_activated(data) {
         return;
     }
 
@@ -289,8 +317,8 @@ fn on_exit<DB:Database, const DATA_TYPE: u8>(data: &mut DepData<DATA_TYPE>, cont
     }
 }
 
-pub fn dep_step<DB:Database, const DATA_TYPE: u8>(_data: &mut DepData<DATA_TYPE>, interp: &mut Interpreter, context: &mut EvmContext<DB>) {
-    if !is_activated() {
+pub fn dep_step<DB:Database, const DATA_TYPE: u8>(data: &mut DepData<DATA_TYPE>, interp: &mut Interpreter, context: &mut EvmContext<DB>) {
+    if !is_activated(data) {
         return;
     }
 
@@ -361,8 +389,8 @@ pub fn dep_step<DB:Database, const DATA_TYPE: u8>(_data: &mut DepData<DATA_TYPE>
     }
 }
 
-pub fn dep_step_end<DB:Database, const DATA_TYPE: u8>(_data: &mut DepData<DATA_TYPE>, interp: &mut Interpreter, context: &mut EvmContext<DB>) {
-    if !is_activated() {
+pub fn dep_step_end<DB:Database, const DATA_TYPE: u8>(data: &mut DepData<DATA_TYPE>, interp: &mut Interpreter, context: &mut EvmContext<DB>) {
+    if !is_activated(data) {
         return;
     }
 
