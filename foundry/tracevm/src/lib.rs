@@ -1,10 +1,9 @@
 use std::{ ffi::{CString, c_char} };
 use revm::{
-    EvmContext,
+    EvmContext, Database,
     interpreter::{ Interpreter, OpCode, CallInputs, CallOutcome, CreateInputs, CreateOutcome, InterpreterResult },
     primitives::{ SpecId },
 };
-use foundry_evm_core::{ backend::DatabaseExt };
 use alloy_primitives::{ address, Address, Bytes, U256, FixedBytes };
 
 #[repr(C)]
@@ -215,7 +214,7 @@ pub fn deactivate() {
     }
 }
 
-fn on_enter<DB:DatabaseExt, const DATA_TYPE: u8>(data: &mut DepData<DATA_TYPE>, context: &mut EvmContext<DB>, is_create: bool, input: &Bytes, addr: Address) {
+fn on_enter<DB:Database, const DATA_TYPE: u8>(data: &mut DepData<DATA_TYPE>, context: &mut EvmContext<DB>, is_create: bool, input: &Bytes, addr: Address) {
     if !is_activated() {
         return;
     }
@@ -227,7 +226,10 @@ fn on_enter<DB:DatabaseExt, const DATA_TYPE: u8>(data: &mut DepData<DATA_TYPE>, 
         if is_create {
             code = Bytes::new()
         } else {
-            let (bytecode, _) = context.code(addr).unwrap();
+            let bytecode = match context.code(addr) {
+                Ok((bytecode, _)) => bytecode,
+                Err(_) => panic!("context.code(addr) failed"),
+            };
             code = bytecode.bytecode().clone();
         }
         let block = context.inner.env.block.number;
@@ -261,7 +263,7 @@ fn on_enter<DB:DatabaseExt, const DATA_TYPE: u8>(data: &mut DepData<DATA_TYPE>, 
     data.call_depth += 1;
 }
 
-fn on_exit<DB:DatabaseExt, const DATA_TYPE: u8>(data: &mut DepData<DATA_TYPE>, context: &mut EvmContext<DB>, result: &InterpreterResult) {
+fn on_exit<DB:Database, const DATA_TYPE: u8>(data: &mut DepData<DATA_TYPE>, context: &mut EvmContext<DB>, result: &InterpreterResult) {
     if !is_activated() {
         return;
     }
@@ -282,7 +284,7 @@ fn on_exit<DB:DatabaseExt, const DATA_TYPE: u8>(data: &mut DepData<DATA_TYPE>, c
     }
 }
 
-pub fn dep_step<DB:DatabaseExt, const DATA_TYPE: u8>(_data: &mut DepData<DATA_TYPE>, interp: &mut Interpreter, context: &mut EvmContext<DB>) {
+pub fn dep_step<DB:Database, const DATA_TYPE: u8>(_data: &mut DepData<DATA_TYPE>, interp: &mut Interpreter, context: &mut EvmContext<DB>) {
     if !is_activated() {
         return;
     }
@@ -296,7 +298,10 @@ pub fn dep_step<DB:DatabaseExt, const DATA_TYPE: u8>(_data: &mut DepData<DATA_TY
                 if data.len() >= 1 {
                     let addr_word = data[data.len() - 1];
                     let addr = Address::from_word(addr_word.into());
-                    let (bytecode, _) = context.inner.code(addr).unwrap();
+                    let bytecode = match context.inner.code(addr) {
+                        Ok((bytecode, _)) => bytecode,
+                        Err(_) => panic!("context.inner.code(addr) failed"),
+                    };
                     let data = bytecode.bytecode().clone();
                     unsafe {
                         GET_CODE_ADDRESS = addr;
@@ -309,7 +314,10 @@ pub fn dep_step<DB:DatabaseExt, const DATA_TYPE: u8>(_data: &mut DepData<DATA_TY
                 if data.len() >= 2 {
                     let addr_word = data[data.len() - 2];
                     let addr = Address::from_word(addr_word.into());
-                    let (bytecode, _) = context.inner.code(addr).unwrap();
+                    let bytecode = match context.inner.code(addr) {
+                        Ok((bytecode, _)) => bytecode,
+                        Err(_) => panic!("context.inner.code(addr) failed"),
+                    };
                     let data = bytecode.bytecode().clone();
                     unsafe {
                         GET_CODE_ADDRESS = addr;
@@ -348,7 +356,7 @@ pub fn dep_step<DB:DatabaseExt, const DATA_TYPE: u8>(_data: &mut DepData<DATA_TY
     }
 }
 
-pub fn dep_step_end<DB:DatabaseExt, const DATA_TYPE: u8>(_data: &mut DepData<DATA_TYPE>, interp: &mut Interpreter, context: &mut EvmContext<DB>) {
+pub fn dep_step_end<DB:Database, const DATA_TYPE: u8>(_data: &mut DepData<DATA_TYPE>, interp: &mut Interpreter, context: &mut EvmContext<DB>) {
     if !is_activated() {
         return;
     }
@@ -360,20 +368,20 @@ pub fn dep_step_end<DB:DatabaseExt, const DATA_TYPE: u8>(_data: &mut DepData<DAT
     }
 }
 
-pub fn dep_call<DB:DatabaseExt, const DATA_TYPE: u8>(data: &mut DepData<DATA_TYPE>, context: &mut EvmContext<DB>, inputs: &mut CallInputs) {
+pub fn dep_call<DB:Database, const DATA_TYPE: u8>(data: &mut DepData<DATA_TYPE>, context: &mut EvmContext<DB>, inputs: &mut CallInputs) {
     let addr = inputs.target_address;
     on_enter(data, context, false, &inputs.input, addr)
 }
 
-pub fn dep_call_end<DB:DatabaseExt, const DATA_TYPE: u8>(data: &mut DepData<DATA_TYPE>, context: &mut EvmContext<DB>, _inputs: &CallInputs, outcome: &CallOutcome) {
+pub fn dep_call_end<DB:Database, const DATA_TYPE: u8>(data: &mut DepData<DATA_TYPE>, context: &mut EvmContext<DB>, _inputs: &CallInputs, outcome: &CallOutcome) {
     on_exit(data, context, &outcome.result)
 }
 
-pub fn dep_create<DB:DatabaseExt, const DATA_TYPE: u8>(data: &mut DepData<DATA_TYPE>, context: &mut EvmContext<DB>, inputs: &mut CreateInputs) {
+pub fn dep_create<DB:Database, const DATA_TYPE: u8>(data: &mut DepData<DATA_TYPE>, context: &mut EvmContext<DB>, inputs: &mut CreateInputs) {
     let addr = inputs.created_address(context.journaled_state.account(inputs.caller).info.nonce);
     on_enter(data, context, true, &inputs.init_code, addr)
 }
 
-pub fn dep_create_end<DB:DatabaseExt, const DATA_TYPE: u8>(data: &mut DepData<DATA_TYPE>, context: &mut EvmContext<DB>, _inputs: &CreateInputs, outcome: &CreateOutcome) {
+pub fn dep_create_end<DB:Database, const DATA_TYPE: u8>(data: &mut DepData<DATA_TYPE>, context: &mut EvmContext<DB>, _inputs: &CreateInputs, outcome: &CreateOutcome) {
     on_exit(data, context, &outcome.result)
 }
