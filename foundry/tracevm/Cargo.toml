@@ -1,0 +1,10 @@
+[package]
+name = "tracevm"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+revm = { version = "9.0.0", default-features = false }
+alloy-primitives = { version = "0.7.1" }
+foundry-evm-core = { path = "../foundry/crates/evm/core" }
+

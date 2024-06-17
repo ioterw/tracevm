@@ -76,10 +76,6 @@ def build_foundry(root):
 
     os.chdir(root + '/foundry/foundry')
 
-    shutil.copy('../../tracer/extra/foundry_build.rs', 'crates/evm/evm/build.rs')
-    mkdir('crates/evm/evm/src/inspectors/debugger')
-    shutil.copy('../../tracer/extra/foundry_mod.rs', 'crates/evm/evm/src/inspectors/debugger/dep_tracer.rs')
-
     reset_file('Cargo.toml')
     patch_file(
         'Cargo.toml',
@@ -91,13 +87,33 @@ def build_foundry(root):
         r'revm\-inspectors\s*\=\s*\{\s*git\s*\=\s*"https\://github\.com/paradigmxyz/revm\-inspectors"\s*\,\s*rev\s*\=\s*"5cf339c"\s*\,\s*features\s*\=\s*\[\s*"serde"\s*,\s*\]\s*}',
         'revm-inspectors = { path = "../revm-inspectors", features = ["serde"] }',
     )
+    patch_file(
+        'Cargo.toml',
+        r'\n\[workspace.dependencies\]\n',
+        (
+            '\n'
+            '[workspace.dependencies]\n'
+            'tracevm = { path = "../tracevm" }\n'
+        ),
+    )
+
+    reset_file('crates/cast/Cargo.toml')
+    patch_file(
+        'crates/cast/Cargo.toml',
+        r'\n\[dependencies\]\n',
+        (
+            '\n'
+            '[dependencies]\n'
+            'tracevm.workspace = true\n'
+        ),
+    )
 
     reset_file('crates/cast/bin/cmd/run.rs')
     patch_file(
         'crates/cast/bin/cmd/run.rs',
         r'use alloy_primitives::U256;\n',
         (
-            'use foundry_evm::inspectors::debugger::dep_tracer;\n'
+            'use tracevm;\n'
             'use alloy_primitives::U256;\n'
         ),
     )
@@ -106,38 +122,38 @@ def build_foundry(root):
         r'\n        let result \= \{\n',
         (
             '\n'
-            '        dep_tracer::activate(tx.hash);\n'
+            '        tracevm::activate(tx.hash);\n'
             '        let result = {\n'
         ),
     )
 
-    reset_file('crates/evm/evm/src/inspectors/mod.rs')
+    reset_file('crates/evm/evm/Cargo.toml')
     patch_file(
-        'crates/evm/evm/src/inspectors/mod.rs',
-        r'\nmod debugger;\n',
+        'crates/evm/evm/Cargo.toml',
+        r'\n\[dependencies\]\n',
         (
             '\n'
-            'pub mod debugger;\n'
+            '[dependencies]\n'
+            'tracevm.workspace = true\n'
         ),
     )
 
     reset_file('crates/evm/evm/src/inspectors/debugger.rs')
     patch_file(
         'crates/evm/evm/src/inspectors/debugger.rs',
-        r'\npub struct Debugger \{\n',
+        r'use alloy_primitives::Address;\n',
         (
-            '\n'
-            'pub struct Debugger {\n'
-            '    dep_data: dep_tracer::DepData<{dep_tracer::DepDataType::Debug as u8}>,\n'
+            'use tracevm;\n'
+            'use alloy_primitives::Address;\n'
         ),
     )
     patch_file(
         'crates/evm/evm/src/inspectors/debugger.rs',
-        r'\nuse revm_inspectors\:\:tracing\:\:types\:\:CallKind;\n',
+        r'\npub struct Debugger \{\n',
         (
             '\n'
-            'use revm_inspectors::tracing::types::CallKind;\n'
-            'pub mod dep_tracer;\n'
+            'pub struct Debugger {\n'
+            '    dep_data: tracevm::DepData<{tracevm::DepDataType::Debug as u8}>,\n'
         ),
     )
     patch_file(
@@ -146,11 +162,11 @@ def build_foundry(root):
         (
             '\n'
             '    fn step_end(&mut self, interp: &mut Interpreter, ecx: &mut EvmContext<DB>) {\n'
-            '        dep_tracer::dep_step_end(&mut self.dep_data, interp, ecx);\n'
+            '        tracevm::dep_step_end(&mut self.dep_data, interp, ecx);\n'
             '    }\n'
             '\n'
             '    fn step(&mut self, interp: &mut Interpreter, ecx: &mut EvmContext<DB>) {\n'
-            '        dep_tracer::dep_step(&mut self.dep_data, interp, ecx);\n'
+            '        tracevm::dep_step(&mut self.dep_data, interp, ecx);\n'
         ),
     )
     patch_file(
@@ -159,7 +175,7 @@ def build_foundry(root):
         (
             '\n'
             '    fn call(&mut self, ecx: &mut EvmContext<DB>, inputs: &mut CallInputs) -> Option<CallOutcome> {\n'
-            '        dep_tracer::dep_call(&mut self.dep_data, ecx, inputs);\n'
+            '        tracevm::dep_call(&mut self.dep_data, ecx, inputs);\n'
         ),
     )
     patch_file(
@@ -168,7 +184,7 @@ def build_foundry(root):
         (
             '\n'
             '    fn call_end( &mut self, _context: &mut EvmContext<DB>, _inputs: &CallInputs, outcome: CallOutcome) -> CallOutcome {\n'
-            '        dep_tracer::dep_call_end(&mut self.dep_data, _context, _inputs, &outcome);\n'
+            '        tracevm::dep_call_end(&mut self.dep_data, _context, _inputs, &outcome);\n'
         ),
     )
     patch_file(
@@ -177,7 +193,7 @@ def build_foundry(root):
         (
             '\n'
             '    fn create( &mut self, ecx: &mut EvmContext<DB>, inputs: &mut CreateInputs) -> Option<CreateOutcome> {\n'
-            '        dep_tracer::dep_create(&mut self.dep_data, ecx, inputs);\n'
+            '        tracevm::dep_create(&mut self.dep_data, ecx, inputs);\n'
         ),
     )
     patch_file(
@@ -186,7 +202,7 @@ def build_foundry(root):
         (
             '\n'
             '    fn create_end( &mut self, _context: &mut EvmContext<DB>, _inputs: &CreateInputs, outcome: CreateOutcome) -> CreateOutcome {\n'
-            '        dep_tracer::dep_create_end(&mut self.dep_data, _context, _inputs, &outcome);\n'
+            '        tracevm::dep_create_end(&mut self.dep_data, _context, _inputs, &outcome);\n'
         ),
     )
 

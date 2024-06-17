@@ -77,13 +77,13 @@ extern "C" {
 }
 
 #[repr(u8)]
-pub(crate) enum DepDataType {
+pub enum DepDataType {
     Debug = 1,
     Trace = 2,
 }
 
 #[derive(Clone, Debug)]
-pub(crate) struct DepData<const DATA_TYPE: u8> {
+pub struct DepData<const DATA_TYPE: u8> {
     pub call_depth: i32,
 }
 impl<const DATA_TYPE: u8> Default for DepData<DATA_TYPE> {
@@ -140,7 +140,7 @@ impl<const DATA_TYPE: u8> Default for DepData<DATA_TYPE> {
                     \"output\": \"\",
                     \"past_unknown\": true
                 }";
-                callback = Some(log_callback);
+                callback = Some(trace_callback);
             }
             _ => panic!("Unknown DATA_TYPE")
         }
@@ -189,12 +189,12 @@ static mut GET_CODE_ADDRESS: Address = ZERO_ADDRESS;
 static mut GET_CODE_DATA:    Bytes   = Bytes::new();
 
 extern "C"
-fn log_callback(data: *const c_char) {
+fn trace_callback(data: *const c_char) {
     let c_str: &std::ffi::CStr;
     unsafe {
         c_str = std::ffi::CStr::from_ptr(data);
     }
-    println!("log_callback {:?}", c_str);
+    println!("trace_callback {:?}", c_str);
 }
 
 
@@ -282,7 +282,7 @@ fn on_exit<DB:DatabaseExt, const DATA_TYPE: u8>(data: &mut DepData<DATA_TYPE>, c
     }
 }
 
-pub(crate) fn dep_step<DB:DatabaseExt, const DATA_TYPE: u8>(_data: &mut DepData<DATA_TYPE>, interp: &mut Interpreter, context: &mut EvmContext<DB>) {
+pub fn dep_step<DB:DatabaseExt, const DATA_TYPE: u8>(_data: &mut DepData<DATA_TYPE>, interp: &mut Interpreter, context: &mut EvmContext<DB>) {
     if !is_activated() {
         return;
     }
@@ -348,7 +348,7 @@ pub(crate) fn dep_step<DB:DatabaseExt, const DATA_TYPE: u8>(_data: &mut DepData<
     }
 }
 
-pub(crate) fn dep_step_end<DB:DatabaseExt, const DATA_TYPE: u8>(_data: &mut DepData<DATA_TYPE>, interp: &mut Interpreter, context: &mut EvmContext<DB>) {
+pub fn dep_step_end<DB:DatabaseExt, const DATA_TYPE: u8>(_data: &mut DepData<DATA_TYPE>, interp: &mut Interpreter, context: &mut EvmContext<DB>) {
     if !is_activated() {
         return;
     }
@@ -360,20 +360,20 @@ pub(crate) fn dep_step_end<DB:DatabaseExt, const DATA_TYPE: u8>(_data: &mut DepD
     }
 }
 
-pub(crate) fn dep_call<DB:DatabaseExt, const DATA_TYPE: u8>(data: &mut DepData<DATA_TYPE>, context: &mut EvmContext<DB>, inputs: &mut CallInputs) {
+pub fn dep_call<DB:DatabaseExt, const DATA_TYPE: u8>(data: &mut DepData<DATA_TYPE>, context: &mut EvmContext<DB>, inputs: &mut CallInputs) {
     let addr = inputs.target_address;
     on_enter(data, context, false, &inputs.input, addr)
 }
 
-pub(crate) fn dep_call_end<DB:DatabaseExt, const DATA_TYPE: u8>(data: &mut DepData<DATA_TYPE>, context: &mut EvmContext<DB>, _inputs: &CallInputs, outcome: &CallOutcome) {
+pub fn dep_call_end<DB:DatabaseExt, const DATA_TYPE: u8>(data: &mut DepData<DATA_TYPE>, context: &mut EvmContext<DB>, _inputs: &CallInputs, outcome: &CallOutcome) {
     on_exit(data, context, &outcome.result)
 }
 
-pub(crate) fn dep_create<DB:DatabaseExt, const DATA_TYPE: u8>(data: &mut DepData<DATA_TYPE>, context: &mut EvmContext<DB>, inputs: &mut CreateInputs) {
+pub fn dep_create<DB:DatabaseExt, const DATA_TYPE: u8>(data: &mut DepData<DATA_TYPE>, context: &mut EvmContext<DB>, inputs: &mut CreateInputs) {
     let addr = inputs.created_address(context.journaled_state.account(inputs.caller).info.nonce);
     on_enter(data, context, true, &inputs.init_code, addr)
 }
 
-pub(crate) fn dep_create_end<DB:DatabaseExt, const DATA_TYPE: u8>(data: &mut DepData<DATA_TYPE>, context: &mut EvmContext<DB>, _inputs: &CreateInputs, outcome: &CreateOutcome) {
+pub fn dep_create_end<DB:DatabaseExt, const DATA_TYPE: u8>(data: &mut DepData<DATA_TYPE>, context: &mut EvmContext<DB>, _inputs: &CreateInputs, outcome: &CreateOutcome) {
     on_exit(data, context, &outcome.result)
 }
