@@ -87,7 +87,7 @@ pub struct DepData<const DATA_TYPE: u8> {
 }
 impl<const DATA_TYPE: u8> DepData<DATA_TYPE> {
     pub fn clear(&mut self) {
-        self.call_depth = 0;
+        panic!("I don't know what to do with this");
     }
 }
 impl<const DATA_TYPE: u8> Default for DepData<DATA_TYPE> {
