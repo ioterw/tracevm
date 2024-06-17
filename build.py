@@ -123,9 +123,7 @@ def build_foundry(root):
                 '        traces.clear();\n'
                 '        dep_data.clear();\n'
             ),
-        ),
-
-        (
+        ), (
             r'\n    fn\s*step\s*\(\s*&mut\s*self\s*\,\s*interp\s*\:\s*&mut\s*Interpreter\s*\,\s*context\s*\:\s*&mut\s*EvmContext<DB>\s*\)\s*\{\n',
             (
                 '\n'
