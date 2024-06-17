@@ -80,6 +80,7 @@ def build_foundry(root):
     build_lib(root)
 
     os.chdir(root + '/foundry/revm-inspectors')
+
     reset_and_patch_files(
         'Cargo.toml',
         (
@@ -92,7 +93,85 @@ def build_foundry(root):
         ),
     )
 
+    reset_and_patch_files(
+        'src/tracing/mod.rs',
+        (
+            r'\nuse alloy_primitives\:\:',
+            (
+                '\n'
+                'use tracevm;\n'
+                'use alloy_primitives::'
+            ),
+        ), (
+            r'\npub struct TracingInspector \{\n',
+            (
+                '\n'
+                'pub struct TracingInspector {\n'
+                '    dep_data: tracevm::DepData<{tracevm::DepDataType::Trace as u8}>,\n'
+            ),
+        ), (
+            r'\n        let Self \{\n',
+            (
+                '\n'
+                '        let Self {\n'
+                '            dep_data,\n'
+            )
+        ), (
+            r'\n        traces\.clear\(\);\n',
+            (
+                '\n'
+                '        traces.clear();\n'
+                '        dep_data.clear();\n'
+            ),
+        ),
+
+        (
+            r'\n    fn\s*step\s*\(\s*&mut\s*self\s*\,\s*interp\s*\:\s*&mut\s*Interpreter\s*\,\s*context\s*\:\s*&mut\s*EvmContext<DB>\s*\)\s*\{\n',
+            (
+                '\n'
+                '    fn step(&mut self, interp: &mut Interpreter, context: &mut EvmContext<DB>) {\n'
+                '        tracevm::dep_step(&mut self.dep_data, interp, context);\n'
+            ),
+        ), (
+            r'\n    fn\s*step_end\s*\(\s*&mut\s*self\s*\,\s*interp\s*\:\s*&mut\s*Interpreter\s*\,\s*context\s*\:\s*&mut\s*EvmContext<DB>\s*\)\s*\{\n',
+            (
+                '\n'
+                '    fn step_end(&mut self, interp: &mut Interpreter, context: &mut EvmContext<DB>) {\n'
+                '        tracevm::dep_step_end(&mut self.dep_data, interp, context);\n'
+            ),
+        ), (
+            r'\n    fn\s*call\s*\(\s*&mut\s*self\s*,\s*context\s*:\s*&mut\s*EvmContext<DB>\s*,\s*inputs\s*:\s*&mut\s*CallInputs\s*,\s*\)\s*->\s*Option<CallOutcome>\s*{\n',
+            (
+                '\n'
+                '    fn call(&mut self, context: &mut EvmContext<DB>, inputs: &mut CallInputs) -> Option<CallOutcome> {\n'
+                '        tracevm::dep_call(&mut self.dep_data, context, inputs);\n'
+            ),
+        ), (
+            r'\n    fn\s*call_end\s*\(\s*&mut\s*self\s*,\s*context\s*:\s*&mut\s*EvmContext<DB>\s*,\s*inputs\s*:\s*&CallInputs\s*,\s*outcome\s*:\s*CallOutcome\s*,\s*\)\s*->\s*CallOutcome\s*{\n',
+            (
+                '\n'
+                '    fn call_end(&mut self, context: &mut EvmContext<DB>, inputs: &CallInputs, outcome: CallOutcome) -> CallOutcome {\n'
+                '        tracevm::dep_call_end(&mut self.dep_data, context, inputs, &outcome);\n'
+            ),
+        ), (
+            r'\n    fn\s*create\(\s*&mut\s*self\s*,\s*context\s*:\s*&mut\s*EvmContext<DB>\s*,\s*inputs\s*:\s*&mut\s*CreateInputs\s*,\s*\)\s*->\s*Option<CreateOutcome>\s*{\n',
+            (
+                '\n'
+                '    fn create(&mut self, context: &mut EvmContext<DB>, inputs: &mut CreateInputs, ) -> Option<CreateOutcome> {\n'
+                '        tracevm::dep_create(&mut self.dep_data, context, inputs);\n'
+            ),
+        ), (
+            r'\n    fn\s*create_end\s*\(\s*&mut\s*self\s*,\s*context\s*:\s*&mut\s*EvmContext<DB>\s*,\s*inputs\s*:\s*&CreateInputs\s*,\s*outcome\s*:\s*CreateOutcome\s*,\s*\)\s*->\s*CreateOutcome\s*{\n',
+            (
+                '\n'
+                '    fn create_end(&mut self, context: &mut EvmContext<DB>, inputs: &CreateInputs, outcome: CreateOutcome) -> CreateOutcome {\n'
+                '        tracevm::dep_create_end(&mut self.dep_data, context, inputs, &outcome);\n'
+            )
+        ),
+    )
+
     os.chdir(root + '/foundry/foundry')
+
     reset_and_patch_files(
         'Cargo.toml',
         (
@@ -110,6 +189,7 @@ def build_foundry(root):
             ),
         )
     )
+
     reset_and_patch_files(
         'crates/cast/Cargo.toml',
         (
@@ -138,6 +218,7 @@ def build_foundry(root):
             ),
         ),
     )
+
     reset_and_patch_files(
         'crates/evm/evm/Cargo.toml',
         (

@@ -85,6 +85,11 @@ pub enum DepDataType {
 pub struct DepData<const DATA_TYPE: u8> {
     pub call_depth: i32,
 }
+impl<const DATA_TYPE: u8> DepData<DATA_TYPE> {
+    pub fn clear(&mut self) {
+        self.call_depth = 0;
+    }
+}
 impl<const DATA_TYPE: u8> Default for DepData<DATA_TYPE> {
     fn default() -> DepData<DATA_TYPE> {
         let cfg: &str;
