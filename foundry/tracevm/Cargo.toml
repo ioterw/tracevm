@@ -7,5 +7,7 @@ edition = "2021"
 revm = { version = "9.0.0", default-features = false }
 alloy-primitives = "0.7.1"
 serde_json = "1.0"
+serde = "1"
 queues = "1.0.2"
 alloy-sol-types = "0.7"
+hex = "0.4"

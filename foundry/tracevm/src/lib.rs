@@ -7,6 +7,8 @@ use revm::{
 };
 use alloy_primitives::{ address, Address, Bytes, U256, FixedBytes, Log };
 use alloy_sol_types::{ sol, SolEvent };
+use serde::{Deserialize};
+use hex::FromHex;
 
 #[repr(C)]
 struct CAddress {
@@ -223,8 +225,27 @@ fn trace_callback(data: *const c_char) {
     }
 }
 sol! {
-   #[derive(Default, PartialEq, Debug)]
-   event TRACEVM(string data);
+    #[derive(Default, PartialEq, Debug)]
+    event SLOAD(
+        bytes32 key,
+        bytes32 value,
+        string[] offsets,
+    );
+    event SSTORE(
+        bytes32 key,
+        bytes32 value,
+        string[] offsets,
+    );
+    event TLOAD(
+        bytes32 key,
+        bytes32 value,
+        string[] offsets,
+    );
+    event TSTORE(
+        bytes32 key,
+        bytes32 value,
+        string[] offsets,
+    );
 }
 pub struct TraceCallbackData {
     queue: Option<Queue<String>>,
@@ -236,7 +257,6 @@ impl TraceCallbackData {
         }
         let queue: &mut Queue<String> = self.queue.as_mut().unwrap();
         let _ = queue.add(data.to_string());
-        // println!("trace_callback {} {}", data, queue.size());
     }
     pub fn pull(&mut self) -> Option<Log> {
         if self.queue.is_none() {
@@ -246,10 +266,50 @@ impl TraceCallbackData {
         if queue.size() == 0 {
             return None
         }
+
+        #[derive(Deserialize)]
+        struct JSONSolidity {
+            opcode: String,
+            key: String,
+            value: String,
+            offsets: Vec<(String,String)>,
+        }
+        #[derive(Deserialize)]
+        struct JSONInfo {
+            solidity: JSONSolidity,
+        }
+
         let json_data = queue.remove().unwrap();
-        let event = TRACEVM { data: json_data };
-        let event_data = event.encode_data();
-        let event_topics = event.encode_topics();
+        let json_info: JSONInfo = serde_json::from_str(json_data.as_str()).unwrap();
+
+        let key_fixed = FixedBytes::<32>::from_hex(json_info.solidity.key).unwrap();
+        let value_fixed = FixedBytes::<32>::from_hex(json_info.solidity.value).unwrap();
+        let mut offsets_fixed: Vec<String> = Vec::with_capacity(json_info.solidity.offsets.len());
+        for i in 0..json_info.solidity.offsets.len() {
+            let (a, b) = &json_info.solidity.offsets[i];
+            offsets_fixed.push(a.to_owned() + " " + &b);
+        }
+
+        let (event_data, event_topics) = match json_info.solidity.opcode.as_str() {
+            "sstore" => {
+                let event = SSTORE { key: key_fixed, value: value_fixed, offsets: offsets_fixed };
+                (event.encode_data(), event.encode_topics())
+            },
+            "sload" => {
+                let event = SLOAD { key: key_fixed, value: value_fixed, offsets: offsets_fixed };
+                (event.encode_data(), event.encode_topics())
+            },
+            "tstore" => {
+                let event = TSTORE { key: key_fixed, value: value_fixed, offsets: offsets_fixed };
+                (event.encode_data(), event.encode_topics())
+            },
+            "tload" => {
+                let event = TLOAD { key: key_fixed, value: value_fixed, offsets: offsets_fixed };
+                (event.encode_data(), event.encode_topics())
+            },
+            _ => panic!("Unknown opcode"),
+        };
+
         let event_topics_fixed: Vec<FixedBytes<32>> = event_topics.iter().map(|&i|i.into()).collect();
         let log = Log::new(
             address!("0000000000000000000000000000000000000000"),
