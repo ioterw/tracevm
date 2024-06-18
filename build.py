@@ -129,6 +129,12 @@ def build_foundry(root):
                 '\n'
                 '    fn step(&mut self, interp: &mut Interpreter, context: &mut EvmContext<DB>) {\n'
                 '        tracevm::dep_step(&mut self.dep_data, interp, context);\n'
+                '        unsafe {\n'
+                '            let data = tracevm::TRACE_CALLBACK_DATA.pull();\n'
+                '            if data.is_some() {\n'
+                '                self.log(context, &data.unwrap());\n'
+                '            }\n'
+                '        }\n'
             ),
         ), (
             r'\n    fn\s*step_end\s*\(\s*&mut\s*self\s*\,\s*interp\s*\:\s*&mut\s*Interpreter\s*\,\s*context\s*\:\s*&mut\s*EvmContext<DB>\s*\)\s*\{\n',

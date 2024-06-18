@@ -1,10 +1,12 @@
 use std::{ ffi::{CString, c_char} };
+use queues::{ Queue, IsQueue, queue };
 use revm::{
     EvmContext, Database,
     interpreter::{ Interpreter, OpCode, CallInputs, CallOutcome, CreateInputs, CreateOutcome, InterpreterResult },
     primitives::{ SpecId },
 };
-use alloy_primitives::{ address, Address, Bytes, U256, FixedBytes };
+use alloy_primitives::{ address, Address, Bytes, U256, FixedBytes, Log };
+use alloy_sol_types::{ sol, SolEvent };
 
 #[repr(C)]
 struct CAddress {
@@ -220,16 +222,46 @@ fn trace_callback(data: *const c_char) {
         TRACE_CALLBACK_DATA.push(str_slice);
     }
 }
+sol! {
+   #[derive(Default, PartialEq, Debug)]
+   event TRACEVM(string data);
+}
 pub struct TraceCallbackData {
-
+    queue: Option<Queue<String>>,
 }
 impl TraceCallbackData {
-    pub fn push(&mut self, data: &str) {
-        println!("trace_callback {}", data);
+    fn push(&mut self, data: &str) {
+        if self.queue.is_none() {
+            self.queue = queue![].into();
+        }
+        let queue: &mut Queue<String> = self.queue.as_mut().unwrap();
+        let _ = queue.add(data.to_string());
+        // println!("trace_callback {} {}", data, queue.size());
     }
-    pub fn pull(&mut self) {}
+    pub fn pull(&mut self) -> Option<Log> {
+        if self.queue.is_none() {
+            return None
+        }
+        let queue = self.queue.as_mut().unwrap();
+        if queue.size() == 0 {
+            return None
+        }
+        let json_data = queue.remove().unwrap();
+        let event = TRACEVM { data: json_data };
+        let event_data = event.encode_data();
+        let event_topics = event.encode_topics();
+        let event_topics_fixed: Vec<FixedBytes<32>> = event_topics.iter().map(|&i|i.into()).collect();
+        let log = Log::new(
+            address!("0000000000000000000000000000000000000000"),
+            event_topics_fixed,
+            event_data.into(),
+        ).expect("Log generation failed");
+        Some(log)
+    }
 }
-pub static mut TRACE_CALLBACK_DATA: TraceCallbackData = TraceCallbackData{};
+pub static mut TRACE_CALLBACK_DATA: TraceCallbackData = TraceCallbackData{
+    queue: None,
+};
 
 static mut ACTIVATED_HASH: FixedBytes<32> = FixedBytes::ZERO;
 static mut DEP_DATA_TYPE: u8 = 0;
