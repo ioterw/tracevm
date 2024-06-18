@@ -153,6 +153,12 @@ Run cast
 docker run --rm -it -p 4334:4334 ioterw/tracevm-cast run 0xf717d3585675a6453e7b433692d3d951d24a41c7c0a7d04d1ce114f2db3e036d --flashbots --debug
 ```
 
+or
+
+```bash
+docker run --rm -it ioterw/tracevm-cast run 0xf717d3585675a6453e7b433692d3d951d24a41c7c0a7d04d1ce114f2db3e036d --flashbots
+```
+
 ## Foundry prerequesites
 
 `make`, `git`, `go`, `python3`, `rust`, `gcc` (`clang` on mac should be fine) should be preinstalled.
